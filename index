@@ -1,94 +1,10 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Estado Pines ESP32 vía MQTT</title>
-<style>
-  body { font-family: Arial, sans-serif; }
-  .board {
-    border: 1px solid #ccc; padding: 10px; margin: 10px;
-    display: inline-block; min-width: 180px;
-  }
-  .pin {
-    display: inline-block; width: 30px; height: 30px;
-    margin: 5px; text-align: center; line-height: 30px;
-    border-radius: 5px; font-weight: bold; color: white;
-  }
-  .pin.on { background-color: green; }
-  .pin.off { background-color: red; }
-</style>
+  <title>Mi Página de Inicio</title>
 </head>
 <body>
-
-<h1>Estado Pines ESP32 vía MQTT</h1>
-<div id="boards-container"></div>
-
-<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
-<script>
-  // Cambia por la URL websocket de tu broker MQTT
-  const brokerUrl = 'wss://broker.emqx.io:8084/mqtt'; 
-
-  // Lista de topics que usas en MQTTX
-  const topics = ['Esp32/External/Alarms', 'ITR/External/Alarms'];
-
-  const container = document.getElementById('boards-container');
-  const boardsData = {};
-
-  // Crear contenedor para cada topic/board
-  topics.forEach(topic => {
-    const div = document.createElement('div');
-    div.className = 'board';
-    div.id = topic.replace(/\//g, '_');
-    div.innerHTML = `<h2>${topic}</h2><div class="pins"></div>`;
-    container.appendChild(div);
-    boardsData[topic] = null;
-  });
-
-  // Opciones para la conexión MQTT
-  const options = {
-    clientId: 'web_client_' + Math.random().toString(16).substr(2, 8),
-    clean: true,
-    reconnectPeriod: 1000,
-    connectTimeout: 30 * 1000,
-  };
-
-  // Conexión al broker
-  const client = mqtt.connect(brokerUrl, options);
-
-  client.on('connect', () => {
-    console.log('Conectado al broker MQTT');
-    topics.forEach(topic => client.subscribe(topic));
-  });
-
-  client.on('message', (topic, message) => {
-    try {
-      const data = JSON.parse(message.toString());
-      boardsData[topic] = data;
-      updateBoard(topic, data);
-    } catch (e) {
-      console.error('Error parseando JSON', e);
-    }
-  });
-
-  client.on('error', (err) => {
-    console.error('Error MQTT:', err);
-  });
-
-  function updateBoard(topic, data) {
-    const boardDiv = document.getElementById(topic.replace(/\//g, '_'));
-    const pinsDiv = boardDiv.querySelector('.pins');
-    pinsDiv.innerHTML = '';
-
-    for(let i = 1; i <= 8; i++) {
-      const pinState = data[`pin${i}`];
-      const pinDiv = document.createElement('div');
-      pinDiv.className = 'pin ' + (pinState === 1 ? 'on' : 'off');
-      pinDiv.textContent = i;
-      pinsDiv.appendChild(pinDiv);
-    }
-  }
-</script>
-
+  <h1>¡Bienvenido a mi página!</h1>
+  <p>Este es el contenido de mi página principal.</p>
 </body>
 </html>
