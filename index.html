@@ -1,10 +1,81 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Mi Página de Inicio</title>
+  <meta charset="UTF-8">
+  <title>Estado de Pines ESP32</title>
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+    }
+    .pin {
+      background: white;
+      padding: 10px;
+      margin: 10px auto;
+      width: 200px;
+      text-align: center;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    .on {
+      background-color: #a6f1a6;
+    }
+    .off {
+      background-color: #f1a6a6;
+    }
+  </style>
 </head>
 <body>
-  <h1>¡Bienvenido a mi página!</h1>
-  <p>Este es el contenido de mi página principal.</p>
+  <h2>Estado de Pines del ESP32</h2>
+
+  <div id="pins-container">
+    <!-- Pines se generan dinámicamente -->
+  </div>
+
+  <script>
+    // Configura tu broker EMQX aquí
+    const broker = 'wss://broker.emqx.io:8084/mqtt'; // WebSocket seguro
+    const topicPrefix = 'esp32/pin/'; // ejemplo: esp32/pin/0
+
+    const client = mqtt.connect(broker);
+
+    const pinCount = 8;
+
+    const pinsContainer = document.getElementById('pins-container');
+
+    // Crea elementos HTML para cada pin
+    for (let i = 0; i < pinCount; i++) {
+      const div = document.createElement('div');
+      div.className = 'pin off';
+      div.id = `pin-${i}`;
+      div.innerText = `Pin ${i}: OFF`;
+      pinsContainer.appendChild(div);
+    }
+
+    client.on('connect', () => {
+      console.log('Conectado al broker MQTT');
+
+      // Suscribirse a todos los pines
+      for (let i = 0; i < pinCount; i++) {
+        client.subscribe(`${topicPrefix}${i}`);
+      }
+    });
+
+    client.on('message', (topic, message) => {
+      const pinNumber = topic.split('/').pop(); // extrae el número del pin
+      const estado = message.toString().toLowerCase(); // "on" o "off"
+
+      const pinDiv = document.getElementById(`pin-${pinNumber}`);
+      if (pinDiv) {
+        pinDiv.className = `pin ${estado}`;
+        pinDiv.innerText = `Pin ${pinNumber}: ${estado.toUpperCase()}`;
+      }
+    });
+  </script>
 </body>
 </html>
