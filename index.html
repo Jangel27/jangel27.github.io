@@ -37,6 +37,8 @@
 
     client.on('message', (topic, message) => {
       const byteValue = message[0]; // primer byte recibido
+      document.getElementById('byte').textContent = `Byte recibido: ${byteValue}`;
+      
       const binaryString = byteValue.toString(2).padStart(8, '0'); // ej: '00011010'
 
       const pinsDiv = document.getElementById('pins');
