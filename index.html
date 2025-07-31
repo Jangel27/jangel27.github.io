@@ -32,6 +32,8 @@
     const topic = 'esp32/External_Alarms';
 
     const client = mqtt.connect(broker);
+      username: 'Olivas',
+      password: 'Jangel27'
 
     client.on('connect', () => {
       console.log('Conectado al broker MQTT');
