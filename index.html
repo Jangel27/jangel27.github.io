@@ -1,59 +1,82 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-  <meta charset="utf-8">
-  <title>Estado de Pines ESP32</title>
+  <meta charset="UTF-8">
+  <title>Monitor de Alarmas ESP32</title>
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <style>
-    .pin {
-      font-family: monospace;
-      padding: 5px;
-      margin: 5px;
-      display: inline-block;
-      width: 60px;
-      text-align: center;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+    body {
+      font-family: Arial, sans-serif;
     }
-    .on { background: #c8f7c5; }
-    .off { background: #f7c5c5; }
+    #byte {
+      font-size: 20px;
+      margin-bottom: 20px;
+      font-weight: bold;
+    }
+    .alarm {
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 16px;
+    }
+    .active {
+      background-color: #ffe5e5;
+      color: #b30000;
+      font-weight: bold;
+    }
+    .inactive {
+      background-color: #e5ffe5;
+      color: #007000;
+    }
   </style>
 </head>
 <body>
-  <h2>Estado de Pines (D0 a D7)</h2>
-  <div id="pins"></div>
+  <h2>Estado de Alarmas (desde ESP32 vía EMQX)</h2>
+  <div id="byte">Esperando datos...</div>
+  <div id="alarms"></div>
 
   <script>
+    // MQTT conexión WebSocket
     const client = mqtt.connect('wss://d4e6f442.ala.us-east-1.emqxsl.com:8084/mqtt', {
       clientId: 'web_' + Math.random().toString(16).substr(2, 8),
       username: 'Olivas',
       password: 'Jangel27'
     });
 
+    // Lista de nombres para cada alarma (D0 a D7)
+    const alarmNames = [
+      "Sensor de Fuego",     // D0
+      "Gas Detectado",       // D1
+      "Movimiento",          // D2
+      "Puerta Abierta",      // D3
+      "Nivel de Agua Alto",  // D4
+      "Temperatura Alta",    // D5
+      "Intrusión",           // D6
+      "Falla Eléctrica"      // D7
+    ];
+
     client.on('connect', () => {
-      console.log('Conectado al broker MQTT');
+      console.log('Conectado a EMQX');
       client.subscribe('esp32/External_Alarms');
     });
 
     client.on('message', (topic, message) => {
-      const byteValue = message[0]; // primer byte recibido
-      document.getElementById('byte').textContent = `Byte recibido: ${byteValue}`;
-      
-      const binaryString = byteValue.toString(2).padStart(8, '0'); // ej: '00011010'
+      const byteValue = message[0]; // Obtener el byte recibido
+      document.getElementById('byte').textContent = `Byte recibido: ${byteValue} (bin: ${byteValue.toString(2).padStart(8, '0')})`;
 
-      const pinsDiv = document.getElementById('pins');
-      pinsDiv.innerHTML = ''; // limpiar anterior
+      const alarmsDiv = document.getElementById('alarms');
+      alarmsDiv.innerHTML = '';
 
-      // Mostrar estado de cada bit (D7 a D0)
       for (let i = 7; i >= 0; i--) {
         const bit = (byteValue >> i) & 1;
+
         const div = document.createElement('div');
-        div.className = 'pin ' + (bit ? 'on' : 'off');
-        div.textContent = `D${i}: ${bit ? 'ON' : 'OFF'}`;
-        pinsDiv.appendChild(div);
+        div.className = 'alarm ' + (bit ? 'active' : 'inactive');
+        div.textContent = `D${i} - ${alarmNames[i]}: ${bit ? '🔥 Alarma activa' : '✅ Sin alarma'}`;
+        alarmsDiv.appendChild(div);
       }
     });
   </script>
 </body>
 </html>
-
