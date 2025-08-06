@@ -46,14 +46,14 @@
 
     // Lista de nombres para cada alarma (D0 a D7)
     const alarmNames = [
-      "Sensor de Fuego",     // D0
-      "Gas Detectado",       // D1
-      "Movimiento",          // D2
-      "Puerta Abierta",      // D3
-      "Nivel de Agua Alto",  // D4
-      "Temperatura Alta",    // D5
-      "Intrusión",           // D6
-      "Falla Eléctrica"      // D7
+      "FALLA*ALIM*COM*ITR",     // D0
+      "GPO*ELEC*OPER*ITR",       // D1
+      "FALLA*FUS*DIST*A*ITR",          // D2
+      "FALLA*RECT*A*ITR",      // D3
+      "ALTA*TEMP*CX*ITR",  // D4
+      "FALLA*FUS*VOLTA*A*ITR",    // D5
+      "BAT*EN*OPER*A*ITR",           // D6
+      "BAJO*VOLTAJE*A*ITR"      // D7
     ];
 
     client.on('connect', () => {
