@@ -8,11 +8,35 @@
     body {
       font-family: Arial, sans-serif;
     }
-    #byte {
-      font-size: 20px;
-      margin-bottom: 20px;
+
+    .tabs {
+      display: flex;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+
+    .tab {
+      padding: 10px 20px;
+      border: 1px solid #ccc;
+      border-bottom: none;
+      background-color: #f1f1f1;
+    }
+
+    .tab.active {
+      background-color: white;
       font-weight: bold;
     }
+
+    .tab-content {
+      display: none;
+      border: 1px solid #ccc;
+      padding: 10px;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
     .alarm {
       border: 1px solid #ccc;
       border-radius: 5px;
@@ -20,21 +44,41 @@
       margin: 10px 0;
       font-size: 16px;
     }
+
     .active {
       background-color: #ffe5e5;
       color: #b30000;
       font-weight: bold;
     }
+
     .inactive {
       background-color: #e5ffe5;
       color: #007000;
+    }
+
+    .byte-info {
+      font-size: 18px;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
   <h2>Estado de Alarmas (desde ESP32 vía EMQX)</h2>
-  <div id="byte">Esperando datos...</div>
-  <div id="alarms"></div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="showTab(0)">Alarmas Externas</div>
+    <div class="tab" onclick="showTab(1)">Alarmas Internas</div>
+  </div>
+
+  <div id="tab-0" class="tab-content active">
+    <div class="byte-info" id="byte-external">Esperando datos externos...</div>
+    <div id="alarms-external"></div>
+  </div>
+
+  <div id="tab-1" class="tab-content">
+    <div class="byte-info" id="byte-internal">Esperando datos internos...</div>
+    <div id="alarms-internal"></div>
+  </div>
 
   <script>
     // MQTT conexión WebSocket
@@ -44,39 +88,69 @@
       password: 'Jangel27'
     });
 
-    // Lista de nombres para cada alarma (D0 a D7)
-    const alarmNames = [
-      "FALLA*ALIM*COM*ITR",     // D0
-      "GPO*ELEC*OPER*ITR",       // D1
-      "FALLA*FUS*DIST*A*ITR",          // D2
-      "FALLA*RECT*A*ITR",      // D3
-      "ALTA*TEMP*CX*ITR",  // D4
-      "FALLA*FUS*VOLTA*A*ITR",    // D5
-      "BAT*EN*OPER*A*ITR",           // D6
-      "BAJO*VOLTAJE*A*ITR"      // D7
+    // Nombres de alarmas para cada byte
+    const alarmNamesExternal = [
+      "FALLA*ALIM*COM*ITR",     
+      "GPO*ELEC*OPER*ITR",       
+      "FALLA*FUS*DIST*A*ITR",    
+      "FALLA*RECT*A*ITR",        
+      "ALTA*TEMP*CX*ITR",        
+      "FALLA*FUS*VOLTA*A*ITR",   
+      "BAT*EN*OPER*A*ITR",       
+      "BAJO*VOLTAJE*A*ITR"       
+    ];
+
+    const alarmNamesInternal = [
+      "PUERTA*ABIERTA*INT",      
+      "INTRUSIÓN*DETECTADA",     
+      "ERROR*DE*SENSOR",         
+      "BATERÍA*BAJA",            
+      "SISTEMA*REINICIADO",      
+      "MANTENIMIENTO*REQUERIDO", 
+      "FALLA*DE*COMUNICACIÓN",   
+      "ALARMA*MANUAL*ACTIVADA"   
     ];
 
     client.on('connect', () => {
       console.log('Conectado a EMQX');
       client.subscribe('esp32/External_Alarms');
+      client.subscribe('esp32/Internal_Alarms');
     });
 
     client.on('message', (topic, message) => {
-      const byteValue = message[0]; // Obtener el byte recibido
-      document.getElementById('byte').textContent = `Byte recibido: ${byteValue} (bin: ${byteValue.toString(2).padStart(8, '0')})`;
+      const byteValue = message[0];
+      const binStr = byteValue.toString(2).padStart(8, '0');
 
-      const alarmsDiv = document.getElementById('alarms');
-      alarmsDiv.innerHTML = '';
+      if (topic === 'esp32/External_Alarms') {
+        document.getElementById('byte-external').textContent = `Byte recibido (externo): ${byteValue} (bin: ${binStr})`;
+        updateAlarms('alarms-external', byteValue, alarmNamesExternal);
+      } else if (topic === 'esp32/Internal_Alarms') {
+        document.getElementById('byte-internal').textContent = `Byte recibido (interno): ${byteValue} (bin: ${binStr})`;
+        updateAlarms('alarms-internal', byteValue, alarmNamesInternal);
+      }
+    });
+
+    function updateAlarms(containerId, byteValue, alarmNames) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
 
       for (let i = 7; i >= 0; i--) {
         const bit = (byteValue >> i) & 1;
-
         const div = document.createElement('div');
         div.className = 'alarm ' + (bit ? 'active' : 'inactive');
         div.textContent = `D${i} - ${alarmNames[i]}: ${bit ? '🔥 Alarma activa' : '✅ Sin alarma'}`;
-        alarmsDiv.appendChild(div);
+        container.appendChild(div);
       }
-    });
+    }
+
+    function showTab(index) {
+      const tabs = document.querySelectorAll('.tab');
+      const contents = document.querySelectorAll('.tab-content');
+      tabs.forEach((tab, i) => {
+        tab.classList.toggle('active', i === index);
+        contents[i].classList.toggle('active', i === index);
+      });
+    }
   </script>
 </body>
 </html>
