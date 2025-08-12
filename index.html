@@ -98,15 +98,7 @@
       "FALLA*FUS*VOLTA*A*ITR",   
       "BAT*EN*OPER*A*ITR",       
       "BAJO*VOLTAJE*A*ITR"   
-      "PUERTA*ABIERTA*INT",      
-      "INTRUSIÓN*DETECTADA",     
-      "ERROR*DE*SENSOR",         
-      "BATERÍA*BAJA",            
-      "SISTEMA*REINICIADO",      
-      "MANTENIMIENTO*REQUERIDO", 
-      "FALLA*DE*COMUNICACIÓN",   
-      "ALARMA*MANUAL*ACTIVADA"
-    ];
+     ];
 
     const alarmNamesInternal = [
       "PUERTA*ABIERTA*INT",      
@@ -125,38 +117,24 @@
       client.subscribe('esp32/Internal_Alarms');
     });
 
-    //client.on('message', (topic, message) => {
-      //const byteValue = message[0];
-      //const binStr = byteValue.toString(2).padStart(8, '0');
-
-      //if (topic === 'esp32/External_Alarms') {
-        //document.getElementById('byte-external').textContent = `Byte recibido (externo): ${byteValue} (bin: ${binStr})`;
-        //updateAlarms('alarms-external', byteValue, alarmNamesExternal);
-      //} else if (topic === 'esp32/Internal_Alarms') {
-        //document.getElementById('byte-internal').textContent = `Byte recibido (interno): ${byteValue} (bin: ${binStr})`;
-        //updateAlarms('alarms-internal', byteValue, alarmNamesInternal);
-      //}
-    //});
     client.on('message', (topic, message) => {
-    if (topic === 'esp32/Alarms' && message.length >= 2) {
-    const byte1 = message[0]; // pines 0-7
-    const byte2 = message[1]; // pines 8-15
+      const byteValue = message[0];
+      const binStr = byteValue.toString(2).padStart(8, '0');
 
-    document.getElementById('byte-external').textContent = `Byte 1 (pines 0–7): ${byte1} (bin: ${byte1.toString(2).padStart(8, '0')})`;
-    document.getElementById('byte-internal').textContent = `Byte 2 (pines 8–15): ${byte2} (bin: ${byte2.toString(2).padStart(8, '0')})`;
-
-    updateAlarms('alarms-external', byte1, alarmNamesExternal);
-    updateAlarms('alarms-internal', byte2, alarmNamesInternal);
-  }
-});
-
+      if (topic === 'esp32/External_Alarms') {
+        document.getElementById('byte-external').textContent = `Byte recibido (externo): ${byteValue} (bin: ${binStr})`;
+        updateAlarms('alarms-external', byteValue, alarmNamesExternal);
+      } else if (topic === 'esp32/Internal_Alarms') {
+        document.getElementById('byte-internal').textContent = `Byte recibido (interno): ${byteValue} (bin: ${binStr})`;
+        updateAlarms('alarms-internal', byteValue, alarmNamesInternal);
+      }
+    });
 
     function updateAlarms(containerId, byteValue, alarmNames) {
       const container = document.getElementById(containerId);
       container.innerHTML = '';
 
-     // for (let i = 7; i >= 0; i--) {
-        for (let i = 15; i >= 0; i--) {
+      for (let i = 7; i >= 0; i--) {
         const bit = (byteValue >> i) & 1;
         const div = document.createElement('div');
         div.className = 'alarm ' + (bit ? 'active' : 'inactive');
