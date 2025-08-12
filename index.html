@@ -118,9 +118,10 @@
     });
 
     client.on('message', (topic, message) => {
-      const byteValue = message[0];
+      const byteValue = message[0]; //muestra ASCII del nom recibido
       const binStr = byteValue.toString(2).padStart(8, '0');
-
+      
+      
       if (topic === 'esp32/External_Alarms') {
         document.getElementById('byte-external').textContent = `Byte recibido (externo): ${byteValue} (bin: ${binStr})`;
         updateAlarms('alarms-external', byteValue, alarmNamesExternal);
