@@ -113,8 +113,8 @@
 
     client.on('connect', () => {
       console.log('Conectado a EMQX');
-      client.subscribe('esp32/External_Alarms');
-      client.subscribe('esp32/Internal_Alarms');
+      client.subscribe('esp32/External_Alarms_OTY');
+      client.subscribe('esp32/Internal_Alarms_ITR');
     });
 
     client.on('message', (topic, message) => {
@@ -122,10 +122,10 @@
       const binStr = byteValue.toString(2).padStart(8, '0');
       
       
-      if (topic === 'esp32/External_Alarms') {
+      if (topic === 'esp32/External_Alarms_OTY') {
         document.getElementById('byte-external').textContent = `Byte recibido (externo): ${byteValue} (bin: ${binStr})`;
         updateAlarms('alarms-external', byteValue, alarmNamesOTY);
-      } else if (topic === 'esp32/Internal_Alarms') {
+      } else if (topic === 'esp32/Internal_Alarms_ITR') {
         document.getElementById('byte-internal').textContent = `Byte recibido (interno): ${byteValue} (bin: ${binStr})`;
         updateAlarms('alarms-internal', byteValue, alarmNamesITR);
       }
