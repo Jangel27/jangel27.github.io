@@ -66,18 +66,18 @@
   <h2>Estado de Alarmas (desde ESP32 vía EMQX)</h2>
 
   <div class="tabs">
-    <div class="tab active" onclick="showTab(0)">Alarmas Externas</div>
-    <div class="tab" onclick="showTab(1)">Alarmas Internas</div>
+    <div class="tab active" onclick="showTab(0)">Alarmas Externas OTY</div>
+    <div class="tab" onclick="showTab(1)">Alarmas Externas ITR</div>
   </div>
 
   <div id="tab-0" class="tab-content active">
-    <div class="byte-info" id="byte-external">Esperando datos externos...</div>
-    <div id="alarms-external"></div>
+    <div class="byte-info" id="byte-external-OTY">Esperando datos externos...</div>
+    <div id="alarms-external-OTY"></div>
   </div>
 
   <div id="tab-1" class="tab-content">
-    <div class="byte-info" id="byte-internal">Esperando datos internos...</div>
-    <div id="alarms-internal"></div>
+    <div class="byte-info" id="byte-external-ITR">Esperando datos internos...</div>
+    <div id="alarms-external-ITR"></div>
   </div>
 
   <script>
@@ -89,7 +89,18 @@
     });
 
     // Nombres de alarmas para cada byte
-    const alarmNamesExternal = [
+    const alarmNamesExternalOTY = [
+      "FALLA*ALIM*COM*OTY",     
+      "GPO*ELEC*OPER*OTY",       
+      "FALLA*FUS*DIST*A*OTY",    
+      "FALLA*RECT*A*OTY",        
+      "ALTA*TEMP*CX*OTY",        
+      "FALLA*FUS*VOLTA*A*OTY",   
+      "BAT*EN*OPER*A*OTY",       
+      "BAJO*VOLTAJE*A*OTY"       
+    ];
+
+    const alarmNamesExternalITR = [
       "FALLA*ALIM*COM*ITR",     
       "GPO*ELEC*OPER*ITR",       
       "FALLA*FUS*DIST*A*ITR",    
@@ -97,36 +108,25 @@
       "ALTA*TEMP*CX*ITR",        
       "FALLA*FUS*VOLTA*A*ITR",   
       "BAT*EN*OPER*A*ITR",       
-      "BAJO*VOLTAJE*A*ITR"       
-    ];
-
-    const alarmNamesInternal = [
-      "PUERTA*ABIERTA*INT",      
-      "INTRUSIÓN*DETECTADA",     
-      "ERROR*DE*SENSOR",         
-      "BATERÍA*BAJA",            
-      "SISTEMA*REINICIADO",      
-      "MANTENIMIENTO*REQUERIDO", 
-      "FALLA*DE*COMUNICACIÓN",   
-      "ALARMA*MANUAL*ACTIVADA"   
+      "BAJO*VOLTAJE*A*ITR"   
     ];
 
     client.on('connect', () => {
       console.log('Conectado a EMQX');
-      client.subscribe('esp32/External_Alarms');
-      client.subscribe('esp32/Internal_Alarms');
+      client.subscribe('esp32/External_Alarms_OTY');
+      client.subscribe('esp32/External_Alarms_ITR');
     });
 
     client.on('message', (topic, message) => {
       const byteValue = message[0];
       const binStr = byteValue.toString(2).padStart(8, '0');
 
-      if (topic === 'esp32/External_Alarms') {
-        document.getElementById('byte-external').textContent = `Byte recibido (externo): ${byteValue} (bin: ${binStr})`;
-        updateAlarms('alarms-external', byteValue, alarmNamesExternal);
-      } else if (topic === 'esp32/Internal_Alarms') {
-        document.getElementById('byte-internal').textContent = `Byte recibido (interno): ${byteValue} (bin: ${binStr})`;
-        updateAlarms('alarms-internal', byteValue, alarmNamesInternal);
+      if (topic === 'esp32/External_Alarms_OTY') {
+        document.getElementById('byte-external-OTY').textContent = `Byte recibido (OTY): ${byteValue} (bin: ${binStr})`;
+        updateAlarms('alarms-external-OTY', byteValue, alarmNamesExternalOTY);
+      } else if (topic === 'esp32/External_Alarms_ITR') {
+        document.getElementById('byte-external-ITR').textContent = `Byte recibido (ITR): ${byteValue} (bin: ${binStr})`;
+        updateAlarms('alarms-exnternal-ITR', byteValue, alarmNamesExternalITR);
       }
     });
 
