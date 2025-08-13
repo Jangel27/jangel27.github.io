@@ -123,10 +123,10 @@
       
       
       if (topic === 'esp32/External_Alarms_OTY') {
-        document.getElementById('byte-external-OTY').textContent = `Byte recibido (externo): ${byteValue} (bin: ${binStr})`;
+        document.getElementById('byte-external-OTY').textContent = `Byte recibido (OTY): ${byteValue} (bin: ${binStr})`;
         updateAlarms('alarms-external-OTY', byteValue, alarmNamesOTY);
       } else if (topic === 'esp32/Internal_Alarms_ITR') {
-        document.getElementById('byte-External-ITR').textContent = `Byte recibido (externo): ${byteValue} (bin: ${binStr})`;
+        document.getElementById('byte-External-ITR').textContent = `Byte recibido (ITR): ${byteValue} (bin: ${binStr})`;
         updateAlarms('alarms-External-ITR', byteValue, alarmNamesITR);
       }
     });
