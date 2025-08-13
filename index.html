@@ -138,7 +138,7 @@
         const bit = (byteValue >> i) & 1;
         const div = document.createElement('div');
         div.className = 'alarm ' + (bit ? 'active' : 'inactive');
-        div.textContent = `D${i} - ${alarmNames[i]}: ${bit ? '🔥 Alarma activa' : '✅ Sin alarma'}`;
+        div.textContent = `A${i} - ${alarmNames[i]}: ${bit ? '🔥 Alarma activa' : '✅ Sin alarma'}`;
         container.appendChild(div);
       }
     }
