@@ -114,7 +114,7 @@
     client.on('connect', () => {
       console.log('Conectado a EMQX');
       client.subscribe('esp32/External_Alarms_OTY');
-      client.subscribe('esp32/External_Alarms_ITR');
+      client.subscribe('esp32/External_Alarms');
     });
 
     client.on('message', (topic, message) => {
