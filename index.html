@@ -76,8 +76,8 @@
   </div>
 
   <div id="tab-1" class="tab-content">
-    <div class="byte-info" id="byte-External-ITR">Esperando Datos Externos ITR...</div>
-    <div id="alarms-External-ITR"></div>
+    <div class="byte-info" id="byte-external-ITR">Esperando Datos Externos ITR...</div>
+    <div id="alarms-external-ITR"></div>
   </div>
 
   <script>
@@ -126,8 +126,8 @@
         document.getElementById('byte-external-OTY').textContent = `Byte recibido (OTY): ${byteValue} (bin: ${binStr})`;
         updateAlarms('alarms-external-OTY', byteValue, alarmNamesOTY);
       } else if (topic === 'esp32/External_Alarms_ITR') {
-        document.getElementById('byte-External-ITR').textContent = `Byte recibido (ITR): ${byteValue} (bin: ${binStr})`;
-        updateAlarms('alarms-External-ITR', byteValue, alarmNamesITR);
+        document.getElementById('byte-external-ITR').textContent = `Byte recibido (ITR): ${byteValue} (bin: ${binStr})`;
+        updateAlarms('alarms-external-ITR', byteValue, alarmNamesITR);
       }
     });
 
