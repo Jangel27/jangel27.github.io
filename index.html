@@ -125,7 +125,7 @@
       if (topic === 'esp32/External_Alarms_OTY') {
         document.getElementById('byte-external-OTY').textContent = `Byte recibido (OTY): ${byteValue} (bin: ${binStr})`;
         updateAlarms('alarms-external-OTY', byteValue, alarmNamesOTY);
-      } else if (topic === 'esp32/External_Alarms_ITR') {
+      } else if (topic === 'esp32/External_Alarms') {
         document.getElementById('byte-external-ITR').textContent = `Byte recibido (ITR): ${byteValue} (bin: ${binStr})`;
         updateAlarms('alarms-external-ITR', byteValue, alarmNamesITR);
       }
