@@ -88,7 +88,7 @@
       password: 'Jangel27'
     });
 
-    // 16 nombres de alarma para cada tópico
+  // 16 nombres de alarma para cada tópico
   const alarmNamesExternalOTY = [
     "FALLA*ALIM*COM*OTY",
     "GPO*ELEC*OPER*OTY",
@@ -144,4 +144,35 @@
     if (topic === 'esp32/External_Alarms_OTY') {
       document.getElementById('byte-external-OTY').textContent =
         `Bytes recibidos (OTY): ${highByte}, ${lowByte} | bin: ${binStr}`;
-      updateAlarms('alar
+      updateAlarms('alarms-external-OTY', value, alarmNamesExternalOTY);
+    } else if (topic === 'esp32/External_Alarms_ITR') {
+      document.getElementById('byte-external-ITR').textContent =
+        `Bytes recibidos (ITR): ${highByte}, ${lowByte} | bin: ${binStr}`;
+      updateAlarms('alarms-external-ITR', value, alarmNamesExternalITR);
+    }
+  });
+
+  // ✅ Ahora maneja 16 bits
+  function updateAlarms(containerId, value16bit, alarmNames) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+
+    for (let i = 15; i >= 0; i--) {
+      const bit = (value16bit >> i) & 1;
+      const div = document.createElement('div');
+      div.className = 'alarm ' + (bit ? 'active' : 'inactive');
+      div.textContent = `A${15 - i} - ${alarmNames[15 - i]}: ${bit ? '🔥 Alarma activa' : '✅ Sin alarma'}`;
+      container.appendChild(div);
+    }
+  }
+
+  function showTab(index) {
+    const tabs = document.querySelectorAll('.tab');
+    const contents = document.querySelectorAll('.tab-content');
+    tabs.forEach((tab, i) => {
+      tab.classList.toggle('active', i === index);
+      contents[i].classList.toggle('active', i === index);
+    });
+  }
+</script>
+
