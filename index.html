@@ -97,7 +97,15 @@
       "ALTA*TEMP*CX*OTY",        
       "FALLA*FUS*VOLTA*A*OTY",   
       "BAT*EN*OPER*A*OTY",       
-      "BAJO*VOLTAJE*A*OTY"       
+      "BAJO*VOLTAJE*A*OTY"
+      "ALARMA LIBRE"
+      "ALARMA LIBRE"
+      "ALARMA LIBRE"
+      "ALARMA LIBRE"
+      "ALARMA LIBRE"
+      "ALARMA LIBRE"
+      "ALARMA LIBRE"
+      "ALARMA LIBRE"
     ];
 
     const alarmNamesExternalITR = [
@@ -108,7 +116,15 @@
       "ALTA*TEMP*CX*ITR",        
       "FALLA*FUS*VOLTA*A*ITR",   
       "BAT*EN*OPER*A*ITR",       
-      "BAJO*VOLTAJE*A*ITR"   
+      "BAJO*VOLTAJE*A*ITR"
+      "ALARMA LIBRE"
+      "ALARMA LIBRE"
+      "ALARMA LIBRE"
+      "ALARMA LIBRE"
+      "ALARMA LIBRE"
+      "ALARMA LIBRE"
+      "ALARMA LIBRE"
+      "ALARMA LIBRE"
     ];
 
     client.on('connect', () => {
@@ -119,7 +135,7 @@
 
     client.on('message', (topic, message) => {
       const byteValue = message[0];
-      const binStr = byteValue.toString(2).padStart(8, '0');
+      const binStr = byteValue.toString(2).padStart(16, '0');
 
       if (topic === 'esp32/External_Alarms_OTY') {
         document.getElementById('byte-external-OTY').textContent = `Byte recibido (OTY): ${byteValue} (bin: ${binStr})`;
@@ -134,7 +150,7 @@
       const container = document.getElementById(containerId);
       container.innerHTML = '';
 
-      for (let i = 7; i >= 0; i--) {
+      for (let i = 15; i >= 0; i--) {
         const bit = (byteValue >> i) & 1;
         const div = document.createElement('div');
         div.className = 'alarm ' + (bit ? 'active' : 'inactive');
