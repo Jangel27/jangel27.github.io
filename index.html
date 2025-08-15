@@ -88,85 +88,60 @@
       password: 'Jangel27'
     });
 
-    // Nombres de alarmas para cada byte
-    const alarmNamesExternalOTY = [
-      "FALLA*ALIM*COM*OTY",     
-      "GPO*ELEC*OPER*OTY",       
-      "FALLA*FUS*DIST*A*OTY",    
-      "FALLA*RECT*A*OTY",        
-      "ALTA*TEMP*CX*OTY",        
-      "FALLA*FUS*VOLTA*A*OTY",   
-      "BAT*EN*OPER*A*OTY",       
-      "BAJO*VOLTAJE*A*OTY"
-      "ALARMA LIBRE"
-      "ALARMA LIBRE"
-      "ALARMA LIBRE"
-      "ALARMA LIBRE"
-      "ALARMA LIBRE"
-      "ALARMA LIBRE"
-      "ALARMA LIBRE"
-      "ALARMA LIBRE"
-    ];
+    // 16 nombres de alarma para cada tópico
+  const alarmNamesExternalOTY = [
+    "FALLA*ALIM*COM*OTY",
+    "GPO*ELEC*OPER*OTY",
+    "FALLA*FUS*DIST*A*OTY",
+    "FALLA*RECT*A*OTY",
+    "ALTA*TEMP*CX*OTY",
+    "FALLA*FUS*VOLTA*A*OTY",
+    "BAT*EN*OPER*A*OTY",
+    "BAJO*VOLTAJE*A*OTY",
+    "ALARMA LIBRE 1",
+    "ALARMA LIBRE 2",
+    "ALARMA LIBRE 3",
+    "ALARMA LIBRE 4",
+    "ALARMA LIBRE 5",
+    "ALARMA LIBRE 6",
+    "ALARMA LIBRE 7",
+    "ALARMA LIBRE 8"
+  ];
 
-    const alarmNamesExternalITR = [
-      "FALLA*ALIM*COM*ITR",     
-      "GPO*ELEC*OPER*ITR",       
-      "FALLA*FUS*DIST*A*ITR",    
-      "FALLA*RECT*A*ITR",        
-      "ALTA*TEMP*CX*ITR",        
-      "FALLA*FUS*VOLTA*A*ITR",   
-      "BAT*EN*OPER*A*ITR",       
-      "BAJO*VOLTAJE*A*ITR"
-      "ALARMA LIBRE"
-      "ALARMA LIBRE"
-      "ALARMA LIBRE"
-      "ALARMA LIBRE"
-      "ALARMA LIBRE"
-      "ALARMA LIBRE"
-      "ALARMA LIBRE"
-      "ALARMA LIBRE"
-    ];
+  const alarmNamesExternalITR = [
+    "FALLA*ALIM*COM*ITR",
+    "GPO*ELEC*OPER*ITR",
+    "FALLA*FUS*DIST*A*ITR",
+    "FALLA*RECT*A*ITR",
+    "ALTA*TEMP*CX*ITR",
+    "FALLA*FUS*VOLTA*A*ITR",
+    "BAT*EN*OPER*A*ITR",
+    "BAJO*VOLTAJE*A*ITR",
+    "ALARMA LIBRE 1",
+    "ALARMA LIBRE 2",
+    "ALARMA LIBRE 3",
+    "ALARMA LIBRE 4",
+    "ALARMA LIBRE 5",
+    "ALARMA LIBRE 6",
+    "ALARMA LIBRE 7",
+    "ALARMA LIBRE 8"
+  ];
 
-    client.on('connect', () => {
-      console.log('Conectado a EMQX');
-      client.subscribe('esp32/External_Alarms_OTY');
-      client.subscribe('esp32/External_Alarms_ITR');
-    });
+  client.on('connect', () => {
+    console.log('✅ Conectado a EMQX');
+    client.subscribe('esp32/External_Alarms_OTY');
+    client.subscribe('esp32/External_Alarms_ITR');
+  });
 
-    client.on('message', (topic, message) => {
-      const byteValue = message[0];
-      const binStr = byteValue.toString(2).padStart(16, '0');
+  client.on('message', (topic, message) => {
+    // ✅ Leer los 2 bytes correctamente
+    const highByte = message[0];
+    const lowByte = message[1];
+    const value = (highByte << 8) | lowByte; // uint16_t reconstruido
 
-      if (topic === 'esp32/External_Alarms_OTY') {
-        document.getElementById('byte-external-OTY').textContent = `Byte recibido (OTY): ${byteValue} (bin: ${binStr})`;
-        updateAlarms('alarms-external-OTY', byteValue, alarmNamesExternalOTY);
-      } else if (topic === 'esp32/External_Alarms_ITR') {
-        document.getElementById('byte-external-ITR').textContent = `Byte recibido (ITR): ${byteValue} (bin: ${binStr})`;
-        updateAlarms('alarms-external-ITR', byteValue, alarmNamesExternalITR);
-      }
-    });
+    const binStr = value.toString(2).padStart(16, '0'); // ej: "0010110000101111"
 
-    function updateAlarms(containerId, byteValue, alarmNames) {
-      const container = document.getElementById(containerId);
-      container.innerHTML = '';
-
-      for (let i = 15; i >= 0; i--) {
-        const bit = (byteValue >> i) & 1;
-        const div = document.createElement('div');
-        div.className = 'alarm ' + (bit ? 'active' : 'inactive');
-        div.textContent = `A${i} - ${alarmNames[i]}: ${bit ? '🔥 Alarma activa' : '✅ Sin alarma'}`;
-        container.appendChild(div);
-      }
-    }
-
-    function showTab(index) {
-      const tabs = document.querySelectorAll('.tab');
-      const contents = document.querySelectorAll('.tab-content');
-      tabs.forEach((tab, i) => {
-        tab.classList.toggle('active', i === index);
-        contents[i].classList.toggle('active', i === index);
-      });
-    }
-  </script>
-</body>
-</html>
+    if (topic === 'esp32/External_Alarms_OTY') {
+      document.getElementById('byte-external-OTY').textContent =
+        `Bytes recibidos (OTY): ${highByte}, ${lowByte} | bin: ${binStr}`;
+      updateAlarms('alar
