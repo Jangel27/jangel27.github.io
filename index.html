@@ -27,6 +27,12 @@
       font-weight: bold;
     }
 
+    /* ✅ Color rojo cuando hay alarma activa */
+    .tab.alarm-active-tab {
+      background-color: red !important;
+      color: white;
+    }
+
     .tab-content {
       display: none;
       border: 1px solid #ccc;
@@ -71,15 +77,14 @@
   </div>
 
   <div id="tab-0" class="tab-content active">
-    <div class="byte-info" id="byte-external-OTY">Esperando datos de OTY...</div>
+    <div class="byte-info" id="byte-external-OTY">Esperando datos externos...</div>
     <div id="alarms-external-OTY"></div>
   </div>
 
   <div id="tab-1" class="tab-content">
-    <div class="byte-info" id="byte-external-ITR">Esperando datos de ITR...</div>
+    <div class="byte-info" id="byte-external-ITR">Esperando datos internos...</div>
     <div id="alarms-external-ITR"></div>
   </div>
-
   <script>
     // MQTT conexión WebSocket
     const client = mqtt.connect('wss://d4e6f442.ala.us-east-1.emqxsl.com:8084/mqtt', {
@@ -153,25 +158,49 @@
   });
 
   // ✅ Ahora maneja 16 bits
-  function updateAlarms(containerId, value16bit, alarmNames) {
-    const container = document.getElementById(containerId);
-    container.innerHTML = '';
+function updateAlarms(containerId, value16bit, alarmNames) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
 
-    for (let i = 15; i >= 0; i--) {
-      const bit = (value16bit >> i) & 1;
-      const div = document.createElement('div');
-      div.className = 'alarm ' + (bit ? 'active' : 'inactive');
-      div.textContent = `A${15 - i} - ${alarmNames[15 - i]}: ${bit ? '🔥 Alarma activa' : '✅ Sin alarma'}`;
-      container.appendChild(div);
+      let hasActiveAlarm = false;
+
+      for (let i = 15; i >= 0; i--) {
+        const bit = (value16bit >> i) & 1;
+        if (bit) hasActiveAlarm = true;
+
+        const div = document.createElement('div');
+        div.className = 'alarm ' + (bit ? 'active' : 'inactive');
+        div.textContent = `A${15 - i} - ${alarmNames[15 - i]}: ${bit ? '🔥 Alarma activa' : '✅ Sin alarma'}`;
+        container.appendChild(div);
+      }
+
+      // Aplicar color rojo en la pestaña si hay al menos una alarma activa
+      if (containerId === 'alarms-external-OTY') {
+        toggleAlarmTab(0, hasActiveAlarm);
+      } else if (containerId === 'alarms-external-ITR') {
+        toggleAlarmTab(1, hasActiveAlarm);
+      }
     }
-  }
 
-  function showTab(index) {
-    const tabs = document.querySelectorAll('.tab');
-    const contents = document.querySelectorAll('.tab-content');
-    tabs.forEach((tab, i) => {
-      tab.classList.toggle('active', i === index);
-      contents[i].classList.toggle('active', i === index);
-    });
-  }
-</script>
+    function toggleAlarmTab(tabIndex, isActive) {
+      const tabs = document.querySelectorAll('.tab');
+      if (!tabs[tabIndex]) return;
+
+      if (isActive) {
+        tabs[tabIndex].classList.add('alarm-active-tab');
+      } else {
+        tabs[tabIndex].classList.remove('alarm-active-tab');
+      }
+    }
+
+    function showTab(index) {
+      const tabs = document.querySelectorAll('.tab');
+      const contents = document.querySelectorAll('.tab-content');
+      tabs.forEach((tab, i) => {
+        tab.classList.toggle('active', i === index);
+        contents[i].classList.toggle('active', i === index);
+      });
+    }
+  </script>
+</body>
+</html>
