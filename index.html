@@ -59,6 +59,11 @@
     .byte-info {
       font-size: 18px;
       font-weight: bold;
+
+    .tab.alarm-active-tab {
+  background-color: red !important;
+  color: white;
+    }  
     }
   </style>
 </head>
@@ -154,15 +159,26 @@
 
   // ✅ Ahora maneja 16 bits
   function updateAlarms(containerId, value16bit, alarmNames) {
-    const container = document.getElementById(containerId);
-    container.innerHTML = '';
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
 
-    for (let i = 15; i >= 0; i--) {
-      const bit = (value16bit >> i) & 1;
-      const div = document.createElement('div');
-      div.className = 'alarm ' + (bit ? 'active' : 'inactive');
-      div.textContent = `A${15 - i} - ${alarmNames[15 - i]}: ${bit ? '🔥 Alarma activa' : '✅ Sin alarma'}`;
-      container.appendChild(div);
+  let hasActiveAlarm = false;
+
+  for (let i = 15; i >= 0; i--) {
+    const bit = (value16bit >> i) & 1;
+    if (bit) hasActiveAlarm = true;
+
+    const div = document.createElement('div');
+    div.className = 'alarm ' + (bit ? 'active' : 'inactive');
+    div.textContent = `A${15 - i} - ${alarmNames[15 - i]}: ${bit ? '🔥 Alarma activa' : '✅ Sin alarma'}`;
+    container.appendChild(div);
+  }
+
+  // Cambiar color de la pestaña según si hay alarma
+  if (containerId === 'alarms-external-OTY') {
+    toggleAlarmTab(0, hasActiveAlarm);
+  } else if (containerId === 'alarms-external-ITR') {
+    toggleAlarmTab(1, hasActiveAlarm);
     }
   }
 
@@ -172,7 +188,19 @@
     tabs.forEach((tab, i) => {
       tab.classList.toggle('active', i === index);
       contents[i].classList.toggle('active', i === index);
-    });
+    }
+  }
+    
+  function toggleAlarmTab(tabIndex, isActive) {
+  const tabs = document.querySelectorAll('.tab');
+  if (!tabs[tabIndex]) return;
+
+  if (isActive) {
+    tabs[tabIndex].classList.add('alarm-active-tab');
+  } else {
+    tabs[tabIndex].classList.remove('alarm-active-tab');
+  }
+});
   }
 </script>
 
