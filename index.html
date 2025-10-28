@@ -27,7 +27,6 @@
       font-weight: bold;
     }
 
-    /* ✅ Color rojo cuando hay alarma activa */
     .tab.alarm-active-tab {
       background-color: red !important;
       color: white;
@@ -66,6 +65,49 @@
       font-size: 16px;
       font-weight: bold;
     }
+
+    /* ====== Tanque cilíndrico horizontal ====== */
+    .tank-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 30px;
+    }
+
+    #diesel-tank {
+      position: relative;
+      width: 300px;
+      height: 120px;
+      border: 4px solid #555;
+      border-radius: 60px; /* forma cilíndrica */
+      background: radial-gradient(circle at 50% 30%, #f9f9f9 0%, #ccc 80%);
+      box-shadow: inset -6px 0 10px rgba(0, 0, 0, 0.3),
+                  inset 6px 0 10px rgba(255, 255, 255, 0.5);
+      overflow: hidden;
+    }
+
+    #diesel-fill {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 0%;
+      background: linear-gradient(to top, #007b00, #00ff00);
+      border-radius: 0 0 60px 60px; /* se ajusta al cilindro */
+      transition: height 0.8s ease, background 0.6s ease;
+      box-shadow: inset 0 2px 5px rgba(255, 255, 255, 0.5);
+    }
+
+    #diesel-text {
+      position: absolute;
+      width: 100%;
+      text-align: center;
+      bottom: 10px;
+      font-weight: bold;
+      color: #000;
+      font-size: 20px;
+      text-shadow: 1px 1px 2px rgba(255,255,255,0.9);
+    }
   </style>
 </head>
 <body>
@@ -76,15 +118,27 @@
     <div class="tab" onclick="showTab(1)">Alarmas Externas ITR</div>
   </div>
 
+  <!-- TAB 0: OTY -->
   <div id="tab-0" class="tab-content active">
     <div class="byte-info" id="byte-external-OTY">Esperando datos de OTY...</div>
     <div id="alarms-external-OTY"></div>
   </div>
 
+  <!-- TAB 1: ITR -->
   <div id="tab-1" class="tab-content">
     <div class="byte-info" id="byte-external-ITR">Esperando datos de ITR...</div>
     <div id="alarms-external-ITR"></div>
+
+    <!-- 💧 Nivel de diésel -->
+    <h3>Nivel de Diésel</h3>
+    <div class="tank-container">
+      <div id="diesel-tank">
+        <div id="diesel-fill"></div>
+        <div id="diesel-text">0%</div>
+      </div>
+    </div>
   </div>
+
   <script>
     // MQTT conexión WebSocket
     const client = mqtt.connect('wss://d4e6f442.ala.us-east-1.emqxsl.com:8084/mqtt', {
@@ -93,114 +147,20 @@
       password: 'Jangel27'
     });
 
-  // 16 nombres de alarma para cada tópico
-  const alarmNamesExternalOTY = [
-    "FALLA*ALIM*COM*OTY",
-    "GPO*ELEC*OPER*OTY",
-    "FALLA*FUS*DIST*A*OTY",
-    "FALLA*RECT*A*OTY",
-    "ALTA*TEMP*CX*OTY",
-    "FALLA*FUS*VOLTA*A*OTY",
-    "BAT*EN*OPER*A*OTY",
-    "BAJO*VOLTAJE*A*OTY",
-    "ALARMA LIBRE 1",
-    "ALARMA LIBRE 2",
-    "ALARMA LIBRE 3",
-    "ALARMA LIBRE 4",
-    "ALARMA LIBRE 5",
-    "ALARMA LIBRE 6",
-    "ALARMA LIBRE 7",
-    "ALARMA LIBRE 8"
-  ];
+    // Nombres de alarmas
+    const alarmNamesExternalOTY = [
+      "FALLA*ALIM*COM*OTY","GPO*ELEC*OPER*OTY","FALLA*FUS*DIST*A*OTY","FALLA*RECT*A*OTY",
+      "ALTA*TEMP*CX*OTY","FALLA*FUS*VOLTA*A*OTY","BAT*EN*OPER*A*OTY","BAJO*VOLTAJE*A*OTY",
+      "ALARMA LIBRE 1","ALARMA LIBRE 2","ALARMA LIBRE 3","ALARMA LIBRE 4",
+      "ALARMA LIBRE 5","ALARMA LIBRE 6","ALARMA LIBRE 7","ALARMA LIBRE 8"
+    ];
 
-  const alarmNamesExternalITR = [
-    "FALLA*ALIM*COM*ITR",
-    "GPO*ELEC*OPER*ITR",
-    "FALLA*FUS*DIST*A*ITR",
-    "FALLA*RECT*A*ITR",
-    "ALTA*TEMP*CX*ITR",
-    "FALLA*FUS*VOLTA*A*ITR",
-    "BAT*EN*OPER*A*ITR",
-    "BAJO*VOLTAJE*A*ITR",
-    "ALARMA LIBRE 1",
-    "ALARMA LIBRE 2",
-    "ALARMA LIBRE 3",
-    "ALARMA LIBRE 4",
-    "ALARMA LIBRE 5",
-    "ALARMA LIBRE 6",
-    "ALARMA LIBRE 7",
-    "ALARMA LIBRE 8"
-  ];
+    const alarmNamesExternalITR = [
+      "FALLA*ALIM*COM*ITR","GPO*ELEC*OPER*ITR","FALLA*FUS*DIST*A*ITR","FALLA*RECT*A*ITR",
+      "ALTA*TEMP*CX*ITR","FALLA*FUS*VOLTA*A*ITR","BAT*EN*OPER*A*ITR","BAJO*VOLTAJE*A*ITR",
+      "ALARMA LIBRE 1","ALARMA LIBRE 2","ALARMA LIBRE 3","ALARMA LIBRE 4",
+      "ALARMA LIBRE 5","ALARMA LIBRE 6","ALARMA LIBRE 7","ALARMA LIBRE 8"
+    ];
 
-  client.on('connect', () => {
-    console.log('✅ Conectado a EMQX');
-    client.subscribe('esp32/External_Alarms_OTY');
-    client.subscribe('esp32/External_Alarms_ITR');
-  });
-
-  client.on('message', (topic, message) => {
-    // ✅ Leer los 2 bytes correctamente
-    const highByte = message[0];
-    const lowByte = message[1];
-    const value = (highByte << 8) | lowByte; // uint16_t reconstruido
-
-    const binStr = value.toString(2).padStart(16, '0'); // ej: "0010110000101111"
-
-    if (topic === 'esp32/External_Alarms_OTY') {
-      document.getElementById('byte-external-OTY').textContent =
-        `Bytes recibidos (OTY): ${highByte}, ${lowByte} | bin: ${binStr}`;
-      updateAlarms('alarms-external-OTY', value, alarmNamesExternalOTY);
-    } else if (topic === 'esp32/External_Alarms_ITR') {
-      document.getElementById('byte-external-ITR').textContent =
-        `Bytes recibidos (ITR): ${highByte}, ${lowByte} | bin: ${binStr}`;
-      updateAlarms('alarms-external-ITR', value, alarmNamesExternalITR);
-    }
-  });
-
-  // ✅ Ahora maneja 16 bits
-function updateAlarms(containerId, value16bit, alarmNames) {
-      const container = document.getElementById(containerId);
-      container.innerHTML = '';
-
-      let hasActiveAlarm = false;
-
-      for (let i = 15; i >= 0; i--) {
-        const bit = (value16bit >> i) & 1;
-        if (bit) hasActiveAlarm = true;
-
-        const div = document.createElement('div');
-        div.className = 'alarm ' + (bit ? 'active' : 'inactive');
-        div.textContent = `A${15 - i} - ${alarmNames[15 - i]}: ${bit ? '🔥 Alarma activa' : '✅ Sin alarma'}`;
-        container.appendChild(div);
-      }
-
-      // Aplicar color rojo en la pestaña si hay al menos una alarma activa
-      if (containerId === 'alarms-external-OTY') {
-        toggleAlarmTab(0, hasActiveAlarm);
-      } else if (containerId === 'alarms-external-ITR') {
-        toggleAlarmTab(1, hasActiveAlarm);
-      }
-    }
-
-    function toggleAlarmTab(tabIndex, isActive) {
-      const tabs = document.querySelectorAll('.tab');
-      if (!tabs[tabIndex]) return;
-
-      if (isActive) {
-        tabs[tabIndex].classList.add('alarm-active-tab');
-      } else {
-        tabs[tabIndex].classList.remove('alarm-active-tab');
-      }
-    }
-
-    function showTab(index) {
-      const tabs = document.querySelectorAll('.tab');
-      const contents = document.querySelectorAll('.tab-content');
-      tabs.forEach((tab, i) => {
-        tab.classList.toggle('active', i === index);
-        contents[i].classList.toggle('active', i === index);
-      });
-    }
-  </script>
-</body>
-</html>
+    client.on('connect', () => {
+      console.log('✅ Co
