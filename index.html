@@ -163,4 +163,88 @@
     ];
 
     client.on('connect', () => {
-      console.log('✅ Co
+      console.log('✅ Conectado a EMQX');
+      client.subscribe('esp32/External_Alarms_OTY');
+      client.subscribe('esp32/External_Alarms_ITR');
+      client.subscribe('esp32/NivelDiesel_ITR'); // Nuevo tópico
+    });
+
+    client.on('message', (topic, message) => {
+      if (topic === 'esp32/External_Alarms_OTY' || topic === 'esp32/External_Alarms_ITR') {
+        const highByte = message[0];
+        const lowByte = message[1];
+        const value = (highByte << 8) | lowByte;
+        const binStr = value.toString(2).padStart(16, '0');
+
+        if (topic === 'esp32/External_Alarms_OTY') {
+          document.getElementById('byte-external-OTY').textContent =
+            `Bytes recibidos (OTY): ${highByte}, ${lowByte} | bin: ${binStr}`;
+          updateAlarms('alarms-external-OTY', value, alarmNamesExternalOTY);
+        } else {
+          document.getElementById('byte-external-ITR').textContent =
+            `Bytes recibidos (ITR): ${highByte}, ${lowByte} | bin: ${binStr}`;
+          updateAlarms('alarms-external-ITR', value, alarmNamesExternalITR);
+        }
+      }
+      else if (topic === 'esp32/nivel_diesel') {
+        const porcentaje = parseInt(message.toString());
+        updateDieselLevel(porcentaje);
+      }
+    });
+
+    function updateAlarms(containerId, value16bit, alarmNames) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '';
+      let hasActiveAlarm = false;
+
+      for (let i = 15; i >= 0; i--) {
+        const bit = (value16bit >> i) & 1;
+        if (bit) hasActiveAlarm = true;
+
+        const div = document.createElement('div');
+        div.className = 'alarm ' + (bit ? 'active' : 'inactive');
+        div.textContent = `A${15 - i} - ${alarmNames[15 - i]}: ${bit ? '🔥 Alarma activa' : '✅ Sin alarma'}`;
+        container.appendChild(div);
+      }
+
+      if (containerId === 'alarms-external-OTY') toggleAlarmTab(0, hasActiveAlarm);
+      if (containerId === 'alarms-external-ITR') toggleAlarmTab(1, hasActiveAlarm);
+    }
+
+    function toggleAlarmTab(tabIndex, isActive) {
+      const tabs = document.querySelectorAll('.tab');
+      if (!tabs[tabIndex]) return;
+      tabs[tabIndex].classList.toggle('alarm-active-tab', isActive);
+    }
+
+    function showTab(index) {
+      const tabs = document.querySelectorAll('.tab');
+      const contents = document.querySelectorAll('.tab-content');
+      tabs.forEach((tab, i) => {
+        tab.classList.toggle('active', i === index);
+        contents[i].classList.toggle('active', i === index);
+      });
+    }
+
+    // 💧 Actualiza el nivel del tanque cilíndrico
+    function updateDieselLevel(porcentaje) {
+      const fill = document.getElementById('diesel-fill');
+      const text = document.getElementById('diesel-text');
+
+      const nivel = Math.max(0, Math.min(100, porcentaje));
+      fill.style.height = `${nivel}%`;
+
+      if (nivel < 20) {
+        fill.style.background = 'linear-gradient(to top, #800000, #ff0000)';
+      } else if (nivel < 50) {
+        fill.style.background = 'linear-gradient(to top, #e6b800, #ffff00)';
+      } else {
+        fill.style.background = 'linear-gradient(to top, #007b00, #00ff00)';
+      }
+
+      text.textContent = `${nivel}%`;
+    }
+  </script>
+</body>
+</html>
+Mostrando alarmas ext y nivel de diesel horizontal.txt.
