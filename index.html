@@ -186,7 +186,7 @@
           updateAlarms('alarms-external-ITR', value, alarmNamesExternalITR);
         }
       }
-      else if (topic === 'esp32/nivel_diesel') {
+      else if (topic === 'esp32/NivelDiesel_ITR') {
         const porcentaje = parseInt(message.toString());
         updateDieselLevel(porcentaje);
       }
