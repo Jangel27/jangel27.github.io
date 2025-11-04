@@ -119,6 +119,73 @@
       font-size: 20px;
       text-shadow: 1px 1px 2px rgba(255,255,255,0.9);
     }
+    
+    /* ====== Contenedor de alarmas y casa ====== */
+    .alarms-house-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 20px;
+    }
+
+    /* ====== Dibujo vectorial de la casa ====== */
+    .house-drawing {
+      position: relative;
+      width: 80px;
+      height: 80px;
+      flex-shrink: 0;
+    }
+
+    /* Techo triangular */
+    .roof {
+      width: 0;
+      height: 0;
+      border-left: 40px solid transparent;
+      border-right: 40px solid transparent;
+      border-bottom: 35px solid #b30000;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    /* Paredes */
+    .walls {
+      position: absolute;
+      bottom: 0;
+      width: 80px;
+      height: 45px;
+      background-color: #ffd700;
+      border: 2px solid #b8860b;
+      box-sizing: border-box;
+    }
+
+    /* Puerta */
+    .door {
+      position: absolute;
+      bottom: 0;
+      left: 30px;
+      width: 20px;
+      height: 30px;
+      background-color: #8b4513;
+      border: 1px solid #5a2d0c;
+      border-radius: 2px;
+    }
+
+    /* Ventana */
+    .window {
+      position: absolute;
+      top: 45px;
+      left: 10px;
+      width: 18px;
+      height: 18px;
+      background-color: #87ceeb;
+      border: 2px solid #1e90ff;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+
+    
   </style>
 </head>
 <body>
@@ -133,13 +200,31 @@
   <div id="tab-0" class="tab-content active">
     <div class="byte-info" id="byte-external-OTY">Esperando datos de OTY...</div>
     <div id="alarms-external-OTY"></div>
+    
+     <!-- 🏠 Dibujo vectorial de la casa -->
+    <div class="house-drawing">
+      <div class="roof"></div>
+      <div class="walls"></div>
+      <div class="door"></div>
+      <div class="window"></div>
+    </div>
   </div>
+</div>
 
   <!-- TAB 1: ITR -->
   <div id="tab-1" class="tab-content">
     <div class="byte-info" id="byte-external-ITR">Esperando datos de ITR...</div>
     <div id="alarms-external-ITR"></div>
 
+    <!-- 🏠 Dibujo vectorial de la casa -->
+    <div class="house-drawing">
+      <div class="roof"></div>
+      <div class="walls"></div>
+      <div class="door"></div>
+      <div class="window"></div>
+    </div>
+  </div>
+ 
     <!-- 💧 Nivel de diésel -->
     <h3>Nivel de Diésel</h3>
     <div class="tank-container">
