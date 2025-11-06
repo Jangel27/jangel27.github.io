@@ -79,22 +79,22 @@
       font-weight: bold;
     }
 
-    /* ====== Casa ====== */
-    .house-area {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 20px;
-    }
+    /* ====== Área de la casa ====== */
+  .house-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 40px;
+  }
 
-    .house-drawing {
-      position: relative;
-      width: 540px;
-      height: 540px;
-      flex-shrink: 0;
-    }
+  .house-drawing {
+    position: relative;
+    width: 540px;
+    height: 540px;
+  }
 
-    .roof {
+  /* ====== Techo (solo líneas negras) ====== */
+  .roof {
     position: absolute;
     top: 0;
     left: 0;
@@ -103,39 +103,75 @@
     border-left: 270px solid transparent;
     border-right: 270px solid transparent;
     border-bottom: 200px solid transparent; /* Sin relleno */
-    }
+  }
 
-    .walls {
-      position: absolute;
-      bottom: 0;
-      width: 540px;
-      height: 300px;
-      background-color: transparent; /*#ffd700;*/
-      border: 2px solid #000000;
-      box-sizing: border-box;
-    }
+  /* Lados inclinados del techo */
+  .roof::before,
+  .roof::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    width: 2px;
+    height: 230px;
+    background-color: #000;
+  }
 
-    .door {
-      position: absolute;
-      bottom: 0;
-      left: 210px;
-      width: 120px;
-      height: 180px;
-      background-color: transparent; /*#8b4513;*/
-      border: 1px solid #000000;
-      border-radius: 2px;
-    }
+  .roof::before {
+    left: -270px;
+    transform: rotate(35deg);
+    transform-origin: bottom right;
+  }
 
-    .window {
-      position: absolute;
-      top: 240px;
-      left: 54px;
-      width: 108px;
-      height: 108px;
-      background-color: #87ceeb;
-      border: 2px solid #1e90ff;
-      box-sizing: border-box;
-    }
+  .roof::after {
+    right: -270px;
+    transform: rotate(-35deg);
+    transform-origin: bottom left;
+  }
+
+  /* Línea base del techo */
+  .roof .base-line {
+    position: absolute;
+    bottom: 0;
+    left: -270px;
+    width: 540px;
+    height: 2px;
+    background-color: #000;
+  }
+
+  /* ====== Paredes ====== */
+  .walls {
+    position: absolute;
+    bottom: 0;
+    width: 540px;
+    height: 300px;
+    background-color: transparent;
+    border: 2px solid #000000;
+    box-sizing: border-box;
+  }
+
+  /* ====== Puerta ====== */
+  .door {
+    position: absolute;
+    bottom: 0;
+    left: 210px;
+    width: 120px;
+    height: 180px;
+    background-color: transparent;
+    border: 2px solid #000000;
+    box-sizing: border-box;
+  }
+
+  /* ====== Ventana ====== */
+  .window {
+    position: absolute;
+    top: 240px;
+    left: 54px;
+    width: 108px;
+    height: 108px;
+    background-color: transparent;
+    border: 2px solid #000000;
+    box-sizing: border-box;
+  }
 
     /* ====== Tanque ====== */
     .tank-container {
@@ -193,14 +229,13 @@
     <div class="byte-info" id="byte-external-OTY">Esperando datos de OTY...</div>
     <div class="alarms-house-layout">
       <div class="alarms-container" id="alarms-external-OTY"></div>
+      
       <div class="house-area">
         <div class="house-drawing">
           <div class="roof"></div>
           <div class="walls"></div>
           <div class="door"></div>
           <div class="window"></div>
-        </div>
-        
         </div>
       </div>
     </div>
@@ -211,6 +246,7 @@
     <div class="byte-info" id="byte-external-ITR">Esperando datos de ITR...</div>
     <div class="alarms-house-layout">
       <div class="alarms-container" id="alarms-external-ITR"></div>
+      
       <div class="house-area">
         <div class="house-drawing">
           <div class="roof"></div>
@@ -218,6 +254,7 @@
           <div class="door"></div>
           <div class="window"></div>
         </div>
+      </div>
         <div class="tank-container">
           <div id="diesel-tank">
             <div id="diesel-fill"></div>
@@ -226,7 +263,6 @@
         </div>
       </div>
     </div>
-  </div>
 
   <script>
     // MQTT conexión WebSocket
