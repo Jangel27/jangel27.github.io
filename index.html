@@ -80,101 +80,93 @@
     }
 
     /* ====== Área de la casa ====== */
-  .house-area {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-top: 40px;
-  }
+    .house-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 40px;
+    }
 
-  .house-drawing {
-    position: relative;
-    width: 540px;
-    height: 540px;
-  }
+    .house-drawing {
+      position: relative;
+      width: 540px;
+      height: 540px;
+    }
 
-  /* ====== Techo (solo líneas negras) ====== */
-  .roof {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 0;
-    height: 0;
-    border-left: 270px solid transparent;
-    border-right: 270px solid transparent;
-    border-bottom: 200px solid transparent; /* Sin relleno */
-  }
+    .roof {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 0;
+      height: 0;
+      border-left: 270px solid transparent;
+      border-right: 270px solid transparent;
+      border-bottom: 200px solid transparent;
+    }
 
-  /* Lados inclinados del techo */
-  .roof::before,
-  .roof::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    width: 2px;
-    height: 400px;
-    background-color: #000;
-  }
+    .roof::before,
+    .roof::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      width: 2px;
+      height: 300px;
+      background-color: #000;
+    }
 
-  .roof::before {
-    left: -290px;
-    transform: rotate(50deg);
-    transform-origin: bottom right;
-  }
+    .roof::before {
+      left: -290px;
+      transform: rotate(50deg);
+      transform-origin: bottom right;
+    }
 
-  .roof::after {
-    right: -290px;
-    transform: rotate(-50deg);
-    transform-origin: bottom left;
-  }
+    .roof::after {
+      right: -290px;
+      transform: rotate(-50deg);
+      transform-origin: bottom left;
+    }
 
-  /* Línea base del techo */
-  .roof .base-line {
-    position: absolute;
-    bottom: 0;
-    left: -270px;
-    width: 540px;
-    height: 2px;
-    background-color: #000;
-  }
+    .roof .base-line {
+      position: absolute;
+      bottom: 0;
+      left: -270px;
+      width: 540px;
+      height: 2px;
+      background-color: #000;
+    }
 
-  /* ====== Paredes ====== */
-  .walls {
-    position: absolute;
-    bottom: 0;
-    width: 540px;
-    height: 450px;
-    background-color: transparent;
-    border: 2px solid #000000;
-    box-sizing: border-box;
-  }
+    .walls {
+      position: absolute;
+      bottom: 0;
+      width: 540px;
+      height: 300px;
+      background-color: transparent;
+      border: 2px solid #000000;
+      box-sizing: border-box;
+    }
 
-  /* ====== Puerta ====== */
-  .door {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 150px;
-    height: 200px;
-    background-color: transparent;
-    border: 2px solid #000000;
-    box-sizing: border-box;
-  }
+    .door {
+      position: absolute;
+      bottom: 0;
+      left: 100px;
+      width: 150px;
+      height: 200px;
+      background-color: transparent;
+      border: 2px solid #000000;
+      box-sizing: border-box;
+    }
 
-  /* ====== Ventana ====== */
-  .window {
-    position: absolute;
-    /*top: 240px;*/
-    bottom: 0;
-    left: 390px;
-    width: 150px;
-    height: 200px;
-    background-color: transparent;
-    border: 2px solid #000000;
-    box-sizing: border-box;
-  }
+    .window {
+      position: absolute;
+      bottom: 0;
+      left: 400px;
+      width: 150px;
+      height: 200px;
+      background-color: transparent;
+      border: 2px solid #000000;
+      box-sizing: border-box;
+    }
 
-    /* ====== Tanque ====== */
     .tank-container {
       display: flex;
       justify-content: center;
@@ -215,6 +207,27 @@
       font-size: 20px;
       text-shadow: 1px 1px 2px rgba(255,255,255,0.9);
     }
+
+    .history-box {
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 10px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .clear-btn {
+      margin: 5px 0;
+      padding: 5px 10px;
+      background: #ff6666;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .clear-btn:hover {
+      background: #e60000;
+    }
   </style>
 </head>
 <body>
@@ -230,7 +243,6 @@
     <div class="byte-info" id="byte-external-OTY">Esperando datos de OTY...</div>
     <div class="alarms-house-layout">
       <div class="alarms-container" id="alarms-external-OTY"></div>
-      
       <div class="house-area">
         <div class="house-drawing">
           <div class="roof"></div>
@@ -247,7 +259,6 @@
     <div class="byte-info" id="byte-external-ITR">Esperando datos de ITR...</div>
     <div class="alarms-house-layout">
       <div class="alarms-container" id="alarms-external-ITR"></div>
-      
       <div class="house-area">
         <div class="house-drawing">
           <div class="roof"></div>
@@ -256,14 +267,14 @@
           <div class="window"></div>
         </div>
       </div>
-        <div class="tank-container">
-          <div id="diesel-tank">
-            <div id="diesel-fill"></div>
-            <div id="diesel-text">0%</div>
-          </div>
+      <div class="tank-container">
+        <div id="diesel-tank">
+          <div id="diesel-fill"></div>
+          <div id="diesel-text">0%</div>
         </div>
       </div>
     </div>
+  </div>
 
   <script>
     // MQTT conexión WebSocket
@@ -272,7 +283,6 @@
       username: 'Olivas',
       password: 'Jangel27'
     });
-
 
     const alarmNamesExternalOTY = [
       "FALLA*ALIM*COM*OTY","GPO*ELEC*OPER*OTY","FALLA*FUS*DIST*A*OTY","FALLA*RECT*A*OTY",
@@ -289,7 +299,7 @@
     ];
 
     client.on('connect', () => {
-      console.log('✅ Conectado a EMQX');
+      console.log('? Conectado a EMQX');
       client.subscribe('esp32/External_Alarms_OTY');
       client.subscribe('esp32/External_Alarms_ITR');
       client.subscribe('esp32/NivelDiesel_ITR');
@@ -316,25 +326,6 @@
         updateDieselLevel(porcentaje);
       }
     });
-
-    function updateAlarms(containerId, value16bit, alarmNames) {
-      const container = document.getElementById(containerId);
-      container.innerHTML = '';
-      let hasActiveAlarm = false;
-
-      for (let i = 15; i >= 0; i--) {
-        const bit = (value16bit >> i) & 1;
-        if (bit) hasActiveAlarm = true;
-
-        const div = document.createElement('div');
-        div.className = 'alarm ' + (bit ? 'active' : 'inactive');
-        div.textContent = `A${15 - i} - ${alarmNames[15 - i]}: ${bit ? '⚠️ Alarma activa' : '✅ Sin alarma'}`;
-        container.appendChild(div);
-      }
-
-      if (containerId === 'alarms-external-OTY') toggleAlarmTab(0, hasActiveAlarm);
-      if (containerId === 'alarms-external-ITR') toggleAlarmTab(1, hasActiveAlarm);
-    }
 
     function toggleAlarmTab(tabIndex, isActive) {
       const tabs = document.querySelectorAll('.tab');
@@ -366,6 +357,104 @@
       }
 
       text.textContent = `${nivel}%`;
+    }
+
+    // === HISTORIAL POR PESTAÑA ===
+    const alarmHistory = JSON.parse(localStorage.getItem('alarmHistory') || '{}');
+    if (!alarmHistory['OTY']) alarmHistory['OTY'] = [];
+    if (!alarmHistory['ITR']) alarmHistory['ITR'] = [];
+
+    function createHistoryContainers() {
+      const otyTab = document.getElementById('tab-0');
+      const itrTab = document.getElementById('tab-1');
+
+      const otyHistoryDiv = document.createElement('div');
+      otyHistoryDiv.innerHTML = `
+        <h3>?? Historial de Alarmas OTY</h3>
+        <button class="clear-btn" onclick="clearHistory('OTY')">?? Limpiar Historial OTY</button>
+        <ul id="history-OTY" class="history-box"></ul>
+      `;
+      otyTab.appendChild(otyHistoryDiv);
+
+      const itrHistoryDiv = document.createElement('div');
+      itrHistoryDiv.innerHTML = `
+        <h3>?? Historial de Alarmas ITR</h3>
+        <button class="clear-btn" onclick="clearHistory('ITR')">?? Limpiar Historial ITR</button>
+        <ul id="history-ITR" class="history-box"></ul>
+      `;
+      itrTab.appendChild(itrHistoryDiv);
+    }
+
+    createHistoryContainers();
+
+    function renderHistory(site) {
+      const list = document.getElementById(`history-${site}`);
+      list.innerHTML = '';
+      alarmHistory[site].forEach(entry => addHistoryEntry(site, entry));
+    }
+
+    function addHistoryEntry(site, entry) {
+      const list = document.getElementById(`history-${site}`);
+      const li = document.createElement('li');
+      li.textContent = `[${entry.time}] ${entry.name} ? ${entry.state}`;
+      list.prepend(li);
+    }
+
+    function logAlarmChange(site, name, state) {
+      const timestamp = new Date().toLocaleString();
+      const entry = { time: timestamp, name, state };
+      alarmHistory[site].push(entry);
+      localStorage.setItem('alarmHistory', JSON.stringify(alarmHistory));
+      addHistoryEntry(site, entry);
+    }
+
+    function clearHistory(site) {
+      if (confirm(`¿Seguro que quieres borrar el historial de ${site}?`)) {
+        alarmHistory[site] = [];
+        localStorage.setItem('alarmHistory', JSON.stringify(alarmHistory));
+        renderHistory(site);
+      }
+    }
+
+    renderHistory('OTY');
+    renderHistory('ITR');
+
+    // === Detectar cambios de estado ===
+    let previousAlarmStates = {
+      'alarms-external-OTY': Array(16).fill(0),
+      'alarms-external-ITR': Array(16).fill(0)
+    };
+
+    function updateAlarms(containerId, value16bit, alarmNames) {
+      const container = document.getElementById(containerId);
+      const prev = previousAlarmStates[containerId];
+      const current = [];
+
+      let hasActiveAlarm = false;
+      container.innerHTML = '';
+
+      for (let i = 15; i >= 0; i--) {
+        const bit = (value16bit >> i) & 1;
+        current.push(bit);
+        if (bit) hasActiveAlarm = true;
+
+        if (prev[i] !== undefined && prev[i] !== bit) {
+          const name = alarmNames[15 - i];
+          const site = containerId.includes('OTY') ? 'OTY' : 'ITR';
+          const state = bit ? '?? ACTIVADA' : '? CESÓ';
+          logAlarmChange(site, name, state);
+        }
+
+        const div = document.createElement('div');
+        div.className = 'alarm ' + (bit ? 'active' : 'inactive');
+        div.textContent = `A${15 - i} - ${alarmNames[15 - i]}: ${bit ? '?? Alarma activa' : '? Sin alarma'}`;
+        container.appendChild(div);
+      }
+
+      previousAlarmStates[containerId] = current;
+
+      if (containerId === 'alarms-external-OTY') toggleAlarmTab(0, hasActiveAlarm);
+      if (containerId === 'alarms-external-ITR') toggleAlarmTab(1, hasActiveAlarm);
     }
   </script>
 </body>
