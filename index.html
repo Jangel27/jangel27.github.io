@@ -438,14 +438,15 @@ function updateAlarms(containerId, value16bit, alarmNames) {
 
   container.innerHTML = '';
 
-  for (let i = 15; i >= 0; i--) {
+  // Recorremos de bit 0 a 15 (orden consistente)
+  for (let i = 0; i < 16; i++) {
     const bit = (value16bit >> i) & 1;
-    current.push(bit);
+    current[i] = bit;
     if (bit) hasActiveAlarm = true;
 
-    // Si ya hay un estado previo, solo registrar si cambia
+    // Solo registrar si ya hubo lectura previa y hay cambio
     if (prev && prev[i] !== bit) {
-      const name = alarmNames[15 - i];
+      const name = alarmNames[i];
       const site = containerId.includes('OTY') ? 'OTY' : 'ITR';
       const state = bit ? '🚨 ACTIVADA' : '✅ CESÓ';
       logAlarmChange(site, name, state);
@@ -453,11 +454,10 @@ function updateAlarms(containerId, value16bit, alarmNames) {
 
     const div = document.createElement('div');
     div.className = 'alarm ' + (bit ? 'active' : 'inactive');
-    div.textContent = `A${15 - i} - ${alarmNames[15 - i]}: ${bit ? '🚨 Alarma activa' : '✅ Sin alarma'}`;
+    div.textContent = `A${i} - ${alarmNames[i]}: ${bit ? '🚨 Alarma activa' : '✅ Sin alarma'}`;
     container.appendChild(div);
   }
 
-  // Guardar el nuevo estado para comparar en la siguiente actualización
   previousAlarmStates[containerId] = current;
 
   if (containerId === 'alarms-external-OTY') toggleAlarmTab(0, hasActiveAlarm);
