@@ -5,233 +5,90 @@
   <title>Monitor de Alarmas ESP32</title>
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-    }
+    body { font-family: Arial, sans-serif; }
 
-    .tabs {
-      display: flex;
-      cursor: pointer;
-      margin-bottom: 10px;
-    }
+    .tabs { display: flex; cursor: pointer; margin-bottom: 10px; }
+    .tab { padding: 10px 20px; border: 1px solid #ccc; border-bottom: none; background-color: #f1f1f1; }
+    .tab.active { background-color: white; font-weight: bold; }
+    .tab.alarm-active-tab { background-color: red !important; color: white; }
 
-    .tab {
-      padding: 10px 20px;
-      border: 1px solid #ccc;
-      border-bottom: none;
-      background-color: #f1f1f1;
-    }
+    .tab-content { display: none; border: 1px solid #ccc; padding: 10px; background-color: #d8d8d8; }
+    .tab-content.active { display: block; }
 
-    .tab.active {
-      background-color: white;
-      font-weight: bold;
-    }
+    .alarms-house-layout { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
+    .alarms-container { flex: 1; }
 
-    .tab.alarm-active-tab {
-      background-color: red !important;
-      color: white;
-    }
+    .alarm { border: 1px solid #ccc; border-radius: 5px; padding: 10px; margin: 10px 0; font-size: 12px; width: 270px; }
+    .active { background-color: #ffe5e5; color: #b30000; font-weight: bold; }
+    .inactive { background-color: #e5ffe5; color: #007000; }
 
-    .tab-content {
-      display: none;
-      border: 1px solid #ccc;
-      padding: 10px;
-      background-color: #d8d8d8;
-    }
+    .byte-info { font-size: 16px; font-weight: bold; }
 
-    .tab-content.active {
-      display: block;
-    }
-
-    .alarms-house-layout {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 20px;
-    }
-
-    .alarms-container {
-      flex: 1;
-    }
-
-    .alarm {
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      padding: 10px;
-      margin: 10px 0;
-      font-size: 12px;
-      width: 270px;
-    }
-
-    .active {
-      background-color: #ffe5e5;
-      color: #b30000;
-      font-weight: bold;
-    }
-
-    .inactive {
-      background-color: #e5ffe5;
-      color: #007000;
-    }
-
-    .byte-info {
-      font-size: 16px;
-      font-weight: bold;
-    }
-
-    /* ====== Área de la casa ====== */
-    .house-area {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-top: 40px;
-    }
-
-    .house-drawing {
-      position: relative;
-      width: 540px;
-      height: 620px;
-      top: -70px;
-      left: -50px;
-    }
+    /* ====== Dibujo de la casa ====== */
+    .house-area { display: flex; flex-direction: column; align-items: center; margin-top: 40px; }
+    .house-drawing { position: relative; width: 540px; height: 620px; top: -70px; left: -50px; }
 
     .roof {
-      position: absolute;
-      top: -60px;
-      left: 0;
-      width: 0;
-      height: 0;
-      border-left: 270px solid transparent;
-      border-right: 270px solid transparent;
+      position: absolute; top: -60px; left: 0; width: 0; height: 0;
+      border-left: 270px solid transparent; border-right: 270px solid transparent;
       border-bottom: 200px solid transparent;
     }
 
-    .roof::before,
-    .roof::after {
-      content: "";
-      position: absolute;
-      top: 0;
-      width: 2px;
-      height: 320px;
-      background-color: #000;
+    .roof::before, .roof::after {
+      content: ""; position: absolute; top: 0; width: 2px; height: 320px; background-color: #000;
     }
 
-    .roof::before {
-      left: -270px;
-      transform: rotate(57deg);
-      transform-origin: bottom right;
-    }
+    .roof::before { left: -270px; transform: rotate(57deg); transform-origin: bottom right; }
+    .roof::after { right: -270px; transform: rotate(-57deg); transform-origin: bottom left; }
+    .roof .base-line { position: absolute; bottom: 0; left: -270px; width: 540px; height: 2px; background-color: #000; }
 
-    .roof::after {
-      right: -270px;
-      transform: rotate(-57deg);
-      transform-origin: bottom left;
-    }
+    .walls { position: absolute; bottom: 0; width: 540px; height: 360px; background-color: transparent; border: 2px solid #000; }
+    .door { position: absolute; bottom: 0; left: 0; width: 150px; height: 220px; border: 2px solid #000; }
+    .window { position: absolute; bottom: 0; left: 390px; width: 150px; height: 220px; border: 2px solid #000; }
 
-    .roof .base-line {
-      position: absolute;
-      bottom: 0;
-      left: -270px;
-      width: 540px;
-      height: 2px;
-      background-color: #000;
-    }
-
-    .walls {
-      position: absolute;
-      bottom: 0;
-      width: 540px;
-      height: 360px;
-      background-color: transparent;
-      border: 2px solid #000000;
-      box-sizing: border-box;
-    }
-
-    .door {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 150px;
-      height: 220px;
-      background-color: transparent;
-      border: 2px solid #000000;
-      box-sizing: border-box;
-    }
-
-    .window {
-      position: absolute;
-      bottom: 0;
-      left: 390px;
-      width: 150px;
-      height: 220px;
-      background-color: transparent;
-      border: 2px solid #000000;
-      box-sizing: border-box;
-    }
-
-    .tank-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
+    .tank-container { display: flex; justify-content: center; align-items: center; }
     #diesel-tank {
-      position: absolute;
-      bottom: -220px;
-      left: -60px;
-      width: 150px;
-      height: 75px;
-      border: 4px solid #555;
-      border-radius: 60px;
+      position: absolute; bottom: -220px; left: -60px; width: 150px; height: 75px;
+      border: 4px solid #555; border-radius: 60px;
       background: radial-gradient(circle at 50% 30%, #fff176 0%, #FAD201 60%, #c9a801 100%);
-      box-shadow: inset -6px 0 10px rgba(0, 0, 0, 0.3),
-                  inset 6px 0 10px rgba(255, 255, 255, 0.5);
-      overflow: hidden;
+      box-shadow: inset -6px 0 10px rgba(0, 0, 0, 0.3), inset 6px 0 10px rgba(255, 255, 255, 0.5);
     }
 
     #diesel-fill {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: 0%;
+      position: absolute; bottom: 0; left: 0; width: 100%; height: 0%;
       background: linear-gradient(to top, #007b00, #00ff00);
       border-radius: 0 0 40px 40px;
       transition: height 0.8s ease, background 0.6s ease;
-      box-shadow: inset 0 2px 5px rgba(255, 255, 255, 0.5);
     }
 
     #diesel-text {
-      position: absolute;
-      width: 100%;
-      text-align: center;
-      bottom: 10px;
-      font-weight: bold;
-      color: #000;
-      font-size: 20px;
+      position: absolute; width: 100%; text-align: center; bottom: 10px;
+      font-weight: bold; color: #000; font-size: 20px;
       text-shadow: 1px 1px 2px rgba(255,255,255,0.9);
     }
 
-    .history-box {
-      background: #fff;
-      border: 1px solid #ccc;
-      padding: 10px;
-      max-height: 200px;
-      overflow-y: auto;
+    /* ====== Símbolos SVG ====== */
+    .symbol {
+      position: absolute;
+      width: 60px; height: 60px;
+      fill: #ddd; stroke: none;
+      transition: fill 0.3s, filter 0.3s;
     }
 
-    .clear-btn {
-      margin: 5px 0;
-      padding: 5px 10px;
-      background: #ff6666;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
+    .symbol.alarm {
+      fill: red !important;
+      filter: drop-shadow(0 0 10px red);
+      animation: blink 1s infinite;
     }
-    .clear-btn:hover {
-      background: #e60000;
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.3; transform: scale(1.05); }
     }
+
+    .history-box { background: #fff; border: 1px solid #ccc; padding: 10px; max-height: 200px; overflow-y: auto; }
+    .clear-btn { margin: 5px 0; padding: 5px 10px; background: #ff6666; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+    .clear-btn:hover { background: #e60000; }
   </style>
 </head>
 <body>
@@ -242,7 +99,7 @@
     <div class="tab" onclick="showTab(1)">Alarmas Externas ITR</div>
   </div>
 
-  <!-- TAB 0: OTY -->
+  <!-- TAB 0 -->
   <div id="tab-0" class="tab-content active">
     <div class="byte-info" id="byte-external-OTY">Esperando datos de OTY...</div>
     <div class="alarms-house-layout">
@@ -253,35 +110,80 @@
           <div class="walls"></div>
           <div class="door"></div>
           <div class="window"></div>
-          </div>
-         </div>
-        </div>
-      </div>
-    </div>
-  </div>
 
-  <!-- TAB 1: ITR -->
-  <div id="tab-1" class="tab-content">
-    <div class="byte-info" id="byte-external-ITR">Esperando datos de ITR...</div>
-    <div class="alarms-house-layout">
-      <div class="alarms-container" id="alarms-external-ITR"></div>
-      <div class="house-area">
-        <div class="house-drawing">
-          <div class="roof"></div>
-          <div class="walls"></div>
-          <div class="door"></div>
-          <div class="window"></div>
+          <!-- Tanque de diesel -->
           <div class="tank-container">
-          <div id="diesel-tank">
-          <div id="diesel-fill"></div>
-          <div id="diesel-text">0%</div>
+            <div id="diesel-tank">
+              <div id="diesel-fill"></div>
+              <div id="diesel-text">0%</div>
+            </div>
+          </div>
+
+          <!-- ====== Símbolos ====== -->
+          <svg id="rectificador" class="symbol" viewBox="0 0 64 64" style="top:120px; left:80px;">
+            <polygon points="24,16 48,32 24,48" />
+            <line x1="16" y1="32" x2="24" y2="32" stroke="#ddd" stroke-width="4"/>
+            <line x1="48" y1="32" x2="56" y2="32" stroke="#ddd" stroke-width="4"/>
+          </svg>
+
+          <svg id="fusible" class="symbol" viewBox="0 0 64 64" style="top:120px; left:200px;">
+            <rect x="16" y="28" width="32" height="8" rx="2" ry="2"/>
+            <circle cx="16" cy="32" r="4"/>
+            <circle cx="48" cy="32" r="4"/>
+          </svg>
+
+          <svg id="tierra" class="symbol" viewBox="0 0 64 64" style="top:250px; left:80px;">
+            <line x1="32" y1="20" x2="32" y2="44" stroke="#ddd" stroke-width="4"/>
+            <line x1="20" y1="44" x2="44" y2="44" stroke="#ddd" stroke-width="3"/>
+            <line x1="24" y1="50" x2="40" y2="50" stroke="#ddd" stroke-width="3"/>
+            <line x1="28" y1="56" x2="36" y2="56" stroke="#ddd" stroke-width="3"/>
+          </svg>
+
+          <svg id="sensor" class="symbol" viewBox="0 0 64 64" style="top:250px; left:200px;">
+            <rect x="28" y="16" width="8" height="24" rx="4" ry="4"/>
+            <circle cx="32" cy="46" r="6"/>
+          </svg>
+
+          <svg id="bateria" class="symbol" viewBox="0 0 64 64" style="top:380px; left:80px;">
+            <rect x="20" y="20" width="24" height="24" rx="3" ry="3"/>
+            <rect x="29" y="14" width="6" height="6"/>
+            <line x1="16" y1="32" x2="20" y2="32" stroke="#ddd" stroke-width="3"/>
+            <line x1="44" y1="32" x2="48" y2="32" stroke="#ddd" stroke-width="3"/>
+          </svg>
+
+          <svg id="persona" class="symbol" viewBox="0 0 64 64" style="top:380px; left:200px;">
+            <circle cx="32" cy="18" r="8"/>
+            <rect x="28" y="28" width="8" height="20" rx="4" ry="4"/>
+            <line x1="32" y1="36" x2="22" y2="48" stroke="#ddd" stroke-width="4"/>
+            <line x1="32" y1="36" x2="42" y2="48" stroke="#ddd" stroke-width="4"/>
+          </svg>
+
+          <!-- Debajo de la casa -->
+          <svg id="grupo" class="symbol" viewBox="0 0 64 64" style="bottom:-280px; left:140px;">
+            <rect x="12" y="24" width="40" height="20" rx="4" ry="4"/>
+            <circle cx="22" cy="34" r="3"/>
+            <circle cx="42" cy="34" r="3"/>
+            <rect x="28" y="16" width="8" height="6"/>
+          </svg>
+
+          <svg id="transfer" class="symbol" viewBox="0 0 64 64" style="bottom:-280px; left:260px;">
+            <rect x="16" y="20" width="32" height="24" rx="4" ry="4"/>
+            <path d="M32 16 L32 12 M32 52 L32 48" stroke="#ddd" stroke-width="3"/>
+            <circle cx="32" cy="32" r="4"/>
+          </svg>
+
+          <svg id="poste" class="symbol" viewBox="0 0 64 64" style="bottom:-280px; left:380px;">
+            <rect x="30" y="16" width="4" height="32"/>
+            <line x1="32" y1="16" x2="48" y2="10" stroke="#ddd" stroke-width="3"/>
+            <circle cx="48" cy="10" r="3"/>
+          </svg>
+
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    // MQTT conexión WebSocket
     const client = mqtt.connect('wss://d4e6f442.ala.us-east-1.emqxsl.com:8084/mqtt', {
       clientId: 'web_' + Math.random().toString(16).substr(2, 8),
       username: 'Olivas',
@@ -295,41 +197,34 @@
       "ALARMA LIBRE 5","ALARMA LIBRE 6","ALARMA LIBRE 7","ALARMA LIBRE 8"
     ];
 
-    const alarmNamesExternalITR = [
-      "FALLA*ALIM*COM*ITR","GPO*ELEC*OPER*ITR","FALLA*FUS*DIST*A*ITR","FALLA*RECT*A*ITR",
-      "ALTA*TEMP*CX*ITR","FALLA*FUS*VOLTA*A*ITR","BAT*EN*OPER*A*ITR","BAJO*VOLTAJE*A*ITR",
-      "ALARMA LIBRE 1","ALARMA LIBRE 2","ALARMA LIBRE 3","ALARMA LIBRE 4",
-      "ALARMA LIBRE 5","ALARMA LIBRE 6","ALARMA LIBRE 7","ALARMA LIBRE 8"
-    ];
-
     client.on('connect', () => {
-      console.log('? Conectado a EMQX');
+      console.log('✅ Conectado a EMQX');
       client.subscribe('esp32/External_Alarms_OTY');
-      client.subscribe('esp32/External_Alarms_ITR');
       client.subscribe('esp32/NivelDiesel_ITR');
     });
 
     client.on('message', (topic, message) => {
-      if (topic === 'esp32/External_Alarms_OTY' || topic === 'esp32/External_Alarms_ITR') {
+      if (topic === 'esp32/External_Alarms_OTY') {
         const highByte = message[0];
         const lowByte = message[1];
         const value = (highByte << 8) | lowByte;
         const binStr = value.toString(2).padStart(16, '0');
-
-        if (topic === 'esp32/External_Alarms_OTY') {
-          document.getElementById('byte-external-OTY').textContent =
-            `Bytes recibidos (OTY): ${highByte}, ${lowByte} | bin: ${binStr}`;
-          updateAlarms('alarms-external-OTY', value, alarmNamesExternalOTY);
-        } else {
-          document.getElementById('byte-external-ITR').textContent =
-            `Bytes recibidos (ITR): ${highByte}, ${lowByte} | bin: ${binStr}`;
-          updateAlarms('alarms-external-ITR', value, alarmNamesExternalITR);
-        }
+        document.getElementById('byte-external-OTY').textContent = `Bytes (OTY): ${highByte}, ${lowByte} | bin: ${binStr}`;
+        updateAlarms('alarms-external-OTY', value, alarmNamesExternalOTY);
       } else if (topic === 'esp32/NivelDiesel_ITR') {
-        const porcentaje = parseInt(message.toString());
-        updateDieselLevel(porcentaje);
+        updateDieselLevel(parseInt(message.toString()));
       }
     });
+
+    function activarAlarmaSimbolo(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('alarm');
+    }
+
+    function desactivarAlarmaSimbolo(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('alarm');
+    }
 
     function toggleAlarmTab(tabIndex, isActive) {
       const tabs = document.querySelectorAll('.tab');
@@ -340,129 +235,54 @@
     function showTab(index) {
       const tabs = document.querySelectorAll('.tab');
       const contents = document.querySelectorAll('.tab-content');
-      tabs.forEach((tab, i) => {
-        tab.classList.toggle('active', i === index);
+      tabs.forEach((t, i) => {
+        t.classList.toggle('active', i === index);
         contents[i].classList.toggle('active', i === index);
       });
     }
 
-    function updateDieselLevel(porcentaje) {
+    function updateDieselLevel(p) {
       const fill = document.getElementById('diesel-fill');
       const text = document.getElementById('diesel-text');
-      const nivel = Math.max(0, Math.min(100, porcentaje));
+      const nivel = Math.max(0, Math.min(100, p));
       fill.style.height = `${nivel}%`;
-
-      if (nivel < 20) {
-        fill.style.background = 'linear-gradient(to top, #800000, #ff0000)';
-      } else if (nivel < 50) {
-        fill.style.background = 'linear-gradient(to top, #e6b800, #ffff00)';
-      } else {
-        fill.style.background = 'linear-gradient(to top, #007b00, #00ff00)';
-      }
-
+      if (nivel < 20) fill.style.background = 'linear-gradient(to top, #800000, #ff0000)';
+      else if (nivel < 50) fill.style.background = 'linear-gradient(to top, #e6b800, #ffff00)';
+      else fill.style.background = 'linear-gradient(to top, #007b00, #00ff00)';
       text.textContent = `${nivel}%`;
     }
 
-// === HISTORIAL POR PESTAÑA ===
-const alarmHistory = JSON.parse(localStorage.getItem('alarmHistory') || '{}');
-if (!alarmHistory['OTY']) alarmHistory['OTY'] = [];
-if (!alarmHistory['ITR']) alarmHistory['ITR'] = [];
+    let previousAlarmStates = { 'alarms-external-OTY': null };
 
-function createHistoryContainers() {
-  const otyTab = document.getElementById('tab-0');
-  const itrTab = document.getElementById('tab-1');
+    function updateAlarms(containerId, value16bit, alarmNames) {
+      const container = document.getElementById(containerId);
+      const prev = previousAlarmStates[containerId];
+      const current = [];
+      let hasActiveAlarm = false;
+      container.innerHTML = '';
 
-  const otyHistoryDiv = document.createElement('div');
-  otyHistoryDiv.innerHTML = `
-    <h3>📜 Historial de Alarmas OTY</h3>
-    <button class="clear-btn" onclick="clearHistory('OTY')">🧹 Limpiar Historial OTY</button>
-    <ul id="history-OTY" class="history-box"></ul>
-  `;
-  otyTab.appendChild(otyHistoryDiv);
+      for (let i = 0; i < 16; i++) {
+        const bit = (value16bit >> i) & 1;
+        const name = alarmNames[i];
+        current[i] = bit;
+        if (bit) hasActiveAlarm = true;
 
-  const itrHistoryDiv = document.createElement('div');
-  itrHistoryDiv.innerHTML = `
-    <h3>📜 Historial de Alarmas ITR</h3>
-    <button class="clear-btn" onclick="clearHistory('ITR')">🧹 Limpiar Historial ITR</button>
-    <ul id="history-ITR" class="history-box"></ul>
-  `;
-  itrTab.appendChild(itrHistoryDiv);
-}
+        // Mapeo de alarmas a símbolos
+        if (name.includes("FUS")) bit ? activarAlarmaSimbolo('fusible') : desactivarAlarmaSimbolo('fusible');
+        if (name.includes("RECT")) bit ? activarAlarmaSimbolo('rectificador') : desactivarAlarmaSimbolo('rectificador');
+        if (name.includes("TEMP")) bit ? activarAlarmaSimbolo('sensor') : desactivarAlarmaSimbolo('sensor');
+        if (name.includes("BAT")) bit ? activarAlarmaSimbolo('bateria') : desactivarAlarmaSimbolo('bateria');
+        if (name.includes("GPO*ELEC")) bit ? activarAlarmaSimbolo('grupo') : desactivarAlarmaSimbolo('grupo');
 
-createHistoryContainers();
+        const div = document.createElement('div');
+        div.className = `alarm ${bit ? 'active' : 'inactive'}`;
+        div.textContent = `${alarmNames[i]} → ${bit ? '🚨 ACTIVA' : '✅ OK'}`;
+        container.appendChild(div);
+      }
 
-function renderHistory(site) {
-  const list = document.getElementById(`history-${site}`);
-  list.innerHTML = '';
-  alarmHistory[site].forEach(entry => addHistoryEntry(site, entry));
-}
-
-function addHistoryEntry(site, entry) {
-  const list = document.getElementById(`history-${site}`);
-  const li = document.createElement('li');
-  li.textContent = `[${entry.time}] ${entry.name} → ${entry.state}`;
-  list.prepend(li);
-}
-
-function logAlarmChange(site, name, state) {
-  // Solo registrar si hay un cambio de estado real (0→1 o 1→0)
-  const timestamp = new Date().toLocaleString();
-  const entry = { time: timestamp, name, state };
-  alarmHistory[site].push(entry);
-  localStorage.setItem('alarmHistory', JSON.stringify(alarmHistory));
-  addHistoryEntry(site, entry);
-}
-
-function clearHistory(site) {
-  if (confirm(`¿Seguro que quieres borrar el historial de ${site}?`)) {
-    alarmHistory[site] = [];
-    localStorage.setItem('alarmHistory', JSON.stringify(alarmHistory));
-    renderHistory(site);
-  }
-}
-
-renderHistory('OTY');
-renderHistory('ITR');
-
-// === Detectar cambios de estado ===
-let previousAlarmStates = {
-  'alarms-external-OTY': null,
-  'alarms-external-ITR': null
-};
-
-function updateAlarms(containerId, value16bit, alarmNames) {
-  const container = document.getElementById(containerId);
-  const prev = previousAlarmStates[containerId];
-  const current = [];
-  let hasActiveAlarm = false;
-
-  container.innerHTML = '';
-
-  // Recorremos de bit 0 a 15 (orden consistente)
-  for (let i = 0; i < 16; i++) {
-    const bit = (value16bit >> i) & 1;
-    current[i] = bit;
-    if (bit) hasActiveAlarm = true;
-
-    // Solo registrar si ya hubo lectura previa y hay cambio
-    if (prev && prev[i] !== bit) {
-      const name = alarmNames[i];
-      const site = containerId.includes('OTY') ? 'OTY' : 'ITR';
-      const state = bit ? '🚨 ACTIVADA' : '✅ CESÓ';
-      logAlarmChange(site, name, state);
+      toggleAlarmTab(0, hasActiveAlarm);
+      previousAlarmStates[containerId] = current;
     }
-
-    const div = document.createElement('div');
-    div.className = 'alarm ' + (bit ? 'active' : 'inactive');
-    div.textContent = `A${i} - ${alarmNames[i]}: ${bit ? '🚨 Alarma activa' : '✅ Sin alarma'}`;
-    container.appendChild(div);
-  }
-
-  previousAlarmStates[containerId] = current;
-
-  if (containerId === 'alarms-external-OTY') toggleAlarmTab(0, hasActiveAlarm);
-  if (containerId === 'alarms-external-ITR') toggleAlarmTab(1, hasActiveAlarm);
-}
   </script>
 </body>
 </html>
