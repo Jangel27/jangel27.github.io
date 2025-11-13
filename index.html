@@ -6,283 +6,201 @@
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <style>
     body { font-family: Arial, sans-serif; }
-
     .tabs { display: flex; cursor: pointer; margin-bottom: 10px; }
     .tab { padding: 10px 20px; border: 1px solid #ccc; border-bottom: none; background-color: #f1f1f1; }
     .tab.active { background-color: white; font-weight: bold; }
     .tab.alarm-active-tab { background-color: red !important; color: white; }
-
     .tab-content { display: none; border: 1px solid #ccc; padding: 10px; background-color: #d8d8d8; }
     .tab-content.active { display: block; }
-
     .alarms-house-layout { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
     .alarms-container { flex: 1; }
-
     .alarm { border: 1px solid #ccc; border-radius: 5px; padding: 10px; margin: 10px 0; font-size: 12px; width: 270px; }
     .active { background-color: #ffe5e5; color: #b30000; font-weight: bold; }
     .inactive { background-color: #e5ffe5; color: #007000; }
-
     .byte-info { font-size: 16px; font-weight: bold; }
-
-    /* ====== Dibujo de la casa ====== */
+    /* ====== Área de la casa ====== */
     .house-area { display: flex; flex-direction: column; align-items: center; margin-top: 40px; }
     .house-drawing { position: relative; width: 540px; height: 620px; top: -70px; left: -50px; }
-
-    .roof {
-      position: absolute; top: -60px; left: 0; width: 0; height: 0;
-      border-left: 270px solid transparent; border-right: 270px solid transparent;
-      border-bottom: 200px solid transparent;
-    }
-
-    .roof::before, .roof::after {
-      content: ""; position: absolute; top: 0; width: 2px; height: 320px; background-color: #000;
-    }
-
+    .roof { position: absolute; top: -60px; left: 0; width: 0; height: 0; border-left: 270px solid transparent; border-right: 270px solid transparent; border-bottom: 200px solid transparent; }
+    .roof::before, .roof::after { content: ""; position: absolute; top: 0; width: 2px; height: 320px; background-color: #000; }
     .roof::before { left: -270px; transform: rotate(57deg); transform-origin: bottom right; }
     .roof::after { right: -270px; transform: rotate(-57deg); transform-origin: bottom left; }
     .roof .base-line { position: absolute; bottom: 0; left: -270px; width: 540px; height: 2px; background-color: #000; }
-
-    .walls { position: absolute; bottom: 0; width: 540px; height: 360px; background-color: transparent; border: 2px solid #000; }
-    .door { position: absolute; bottom: 0; left: 0; width: 150px; height: 220px; border: 2px solid #000; }
-    .window { position: absolute; bottom: 0; left: 390px; width: 150px; height: 220px; border: 2px solid #000; }
-
+    .walls { position: absolute; bottom: 0; width: 540px; height: 360px; background-color: transparent; border: 2px solid #000000; box-sizing: border-box; }
+    .door { position: absolute; bottom: 0; left: 0; width: 150px; height: 220px; background-color: transparent; border: 2px solid #000000; box-sizing: border-box; }
+    .window { position: absolute; bottom: 0; left: 390px; width: 150px; height: 220px; background-color: transparent; border: 2px solid #000000; box-sizing: border-box; }
     .tank-container { display: flex; justify-content: center; align-items: center; }
-    #diesel-tank {
-      position: absolute; bottom: -220px; left: -60px; width: 150px; height: 75px;
-      border: 4px solid #555; border-radius: 60px;
-      background: radial-gradient(circle at 50% 30%, #fff176 0%, #FAD201 60%, #c9a801 100%);
-      box-shadow: inset -6px 0 10px rgba(0, 0, 0, 0.3), inset 6px 0 10px rgba(255, 255, 255, 0.5);
-    }
-
-    #diesel-fill {
-      position: absolute; bottom: 0; left: 0; width: 100%; height: 0%;
-      background: linear-gradient(to top, #007b00, #00ff00);
-      border-radius: 0 0 40px 40px;
-      transition: height 0.8s ease, background 0.6s ease;
-    }
-
-    #diesel-text {
-      position: absolute; width: 100%; text-align: center; bottom: 10px;
-      font-weight: bold; color: #000; font-size: 20px;
-      text-shadow: 1px 1px 2px rgba(255,255,255,0.9);
-    }
-
-    /* ====== Símbolos SVG ====== */
-    .symbol {
-      position: absolute;
-      width: 60px; height: 60px;
-      fill: #ddd; stroke: none;
-      transition: fill 0.3s, filter 0.3s;
-    }
-
-    .symbol.alarm {
-      fill: red !important;
-      filter: drop-shadow(0 0 10px red);
-      animation: blink 1s infinite;
-    }
-
-    @keyframes blink {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.3; transform: scale(1.05); }
-    }
-
+    #diesel-tank { position: absolute; bottom: -220px; left: -60px; width: 150px; height: 75px; border: 4px solid #555; border-radius: 60px; background: radial-gradient(circle at 50% 30%, #fff176 0%, #FAD201 60%, #c9a801 100%); box-shadow: inset -6px 0 10px rgba(0,0,0,0.3), inset 6px 0 10px rgba(255,255,255,0.5); overflow: hidden; }
+    #diesel-fill { position: absolute; bottom: 0; left: 0; width: 100%; height: 0%; background: linear-gradient(to top, #007b00, #00ff00); border-radius: 0 0 40px 40px; transition: height 0.8s ease, background 0.6s ease; box-shadow: inset 0 2px 5px rgba(255,255,255,0.5); }
+    #diesel-text { position: absolute; width: 100%; text-align: center; bottom: 10px; font-weight: bold; color: #000; font-size: 20px; text-shadow: 1px 1px 2px rgba(255,255,255,0.9); }
     .history-box { background: #fff; border: 1px solid #ccc; padding: 10px; max-height: 200px; overflow-y: auto; }
     .clear-btn { margin: 5px 0; padding: 5px 10px; background: #ff6666; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
     .clear-btn:hover { background: #e60000; }
+
+    /* ====== Símbolos ====== */
+    .symbol { position: absolute; width: 40px; height: 40px; text-align: center; line-height: 40px; font-weight: bold; border-radius: 5px; background-color: lightgreen; color: black; transition: background 0.5s; }
+    .alarm { background-color: red !important; color: white !important; }
+    /* Posiciones aproximadas dentro de la casa */
+    #rectificador { bottom: 200px; left: 100px; }
+    #fusible { bottom: 200px; left: 200px; }
+    #sensor-temp { bottom: 280px; left: 150px; }
+    #bateria { bottom: 100px; left: 150px; width: 60px; }
+    #persona { bottom: 20px; left: 250px; }
+    #poste { bottom: -120px; left: 250px; }
+    #grupo { bottom: -120px; left: 320px; }
   </style>
 </head>
 <body>
-  <h2>Estado de Alarmas (desde ESP32 vía EMQX)</h2>
+<h2>Estado de Alarmas (desde ESP32 vía EMQX)</h2>
 
-  <div class="tabs">
-    <div class="tab active" onclick="showTab(0)">Alarmas Externas OTY</div>
-    <div class="tab" onclick="showTab(1)">Alarmas Externas ITR</div>
-  </div>
+<div class="tabs">
+  <div class="tab active" onclick="showTab(0)">Alarmas Externas OTY</div>
+  <div class="tab" onclick="showTab(1)">Alarmas Externas ITR</div>
+</div>
 
-  <!-- TAB 0 -->
-  <div id="tab-0" class="tab-content active">
-    <div class="byte-info" id="byte-external-OTY">Esperando datos de OTY...</div>
-    <div class="alarms-house-layout">
-      <div class="alarms-container" id="alarms-external-OTY"></div>
-      <div class="house-area">
-        <div class="house-drawing">
-          <div class="roof"></div>
-          <div class="walls"></div>
-          <div class="door"></div>
-          <div class="window"></div>
-
-          <!-- Tanque de diesel -->
-          <div class="tank-container">
-            <div id="diesel-tank">
-              <div id="diesel-fill"></div>
-              <div id="diesel-text">0%</div>
-            </div>
+<!-- TAB 0: OTY -->
+<div id="tab-0" class="tab-content active">
+  <div class="byte-info" id="byte-external-OTY">Esperando datos de OTY...</div>
+  <div class="alarms-house-layout">
+    <div class="alarms-container" id="alarms-external-OTY"></div>
+    <div class="house-area">
+      <div class="house-drawing">
+        <div class="roof"></div>
+        <div class="walls"></div>
+        <div class="door"></div>
+        <div class="window"></div>
+        <!-- Símbolos OTY -->
+        <div id="rectificador" class="symbol">R</div>
+        <div id="fusible" class="symbol">F</div>
+        <div id="sensor-temp" class="symbol">T</div>
+        <div id="bateria" class="symbol">B</div>
+        <div id="persona" class="symbol">P</div>
+        <div id="poste" class="symbol">L</div>
+        <div id="grupo" class="symbol">G</div>
+        <div class="tank-container">
+          <div id="diesel-tank">
+            <div id="diesel-fill"></div>
+            <div id="diesel-text">0%</div>
           </div>
-
-          <!-- ====== Símbolos ====== -->
-          <svg id="rectificador" class="symbol" viewBox="0 0 64 64" style="top:120px; left:80px;">
-            <polygon points="24,16 48,32 24,48" />
-            <line x1="16" y1="32" x2="24" y2="32" stroke="#ddd" stroke-width="4"/>
-            <line x1="48" y1="32" x2="56" y2="32" stroke="#ddd" stroke-width="4"/>
-          </svg>
-
-          <svg id="fusible" class="symbol" viewBox="0 0 64 64" style="top:120px; left:200px;">
-            <rect x="16" y="28" width="32" height="8" rx="2" ry="2"/>
-            <circle cx="16" cy="32" r="4"/>
-            <circle cx="48" cy="32" r="4"/>
-          </svg>
-
-          <svg id="tierra" class="symbol" viewBox="0 0 64 64" style="top:250px; left:80px;">
-            <line x1="32" y1="20" x2="32" y2="44" stroke="#ddd" stroke-width="4"/>
-            <line x1="20" y1="44" x2="44" y2="44" stroke="#ddd" stroke-width="3"/>
-            <line x1="24" y1="50" x2="40" y2="50" stroke="#ddd" stroke-width="3"/>
-            <line x1="28" y1="56" x2="36" y2="56" stroke="#ddd" stroke-width="3"/>
-          </svg>
-
-          <svg id="sensor" class="symbol" viewBox="0 0 64 64" style="top:250px; left:200px;">
-            <rect x="28" y="16" width="8" height="24" rx="4" ry="4"/>
-            <circle cx="32" cy="46" r="6"/>
-          </svg>
-
-          <svg id="bateria" class="symbol" viewBox="0 0 64 64" style="top:380px; left:80px;">
-            <rect x="20" y="20" width="24" height="24" rx="3" ry="3"/>
-            <rect x="29" y="14" width="6" height="6"/>
-            <line x1="16" y1="32" x2="20" y2="32" stroke="#ddd" stroke-width="3"/>
-            <line x1="44" y1="32" x2="48" y2="32" stroke="#ddd" stroke-width="3"/>
-          </svg>
-
-          <svg id="persona" class="symbol" viewBox="0 0 64 64" style="top:380px; left:200px;">
-            <circle cx="32" cy="18" r="8"/>
-            <rect x="28" y="28" width="8" height="20" rx="4" ry="4"/>
-            <line x1="32" y1="36" x2="22" y2="48" stroke="#ddd" stroke-width="4"/>
-            <line x1="32" y1="36" x2="42" y2="48" stroke="#ddd" stroke-width="4"/>
-          </svg>
-
-          <!-- Debajo de la casa -->
-          <svg id="grupo" class="symbol" viewBox="0 0 64 64" style="bottom:-280px; left:140px;">
-            <rect x="12" y="24" width="40" height="20" rx="4" ry="4"/>
-            <circle cx="22" cy="34" r="3"/>
-            <circle cx="42" cy="34" r="3"/>
-            <rect x="28" y="16" width="8" height="6"/>
-          </svg>
-
-          <svg id="transfer" class="symbol" viewBox="0 0 64 64" style="bottom:-280px; left:260px;">
-            <rect x="16" y="20" width="32" height="24" rx="4" ry="4"/>
-            <path d="M32 16 L32 12 M32 52 L32 48" stroke="#ddd" stroke-width="3"/>
-            <circle cx="32" cy="32" r="4"/>
-          </svg>
-
-          <svg id="poste" class="symbol" viewBox="0 0 64 64" style="bottom:-280px; left:380px;">
-            <rect x="30" y="16" width="4" height="32"/>
-            <line x1="32" y1="16" x2="48" y2="10" stroke="#ddd" stroke-width="3"/>
-            <circle cx="48" cy="10" r="3"/>
-          </svg>
-
         </div>
       </div>
     </div>
   </div>
+</div>
 
-  <script>
-    const client = mqtt.connect('wss://d4e6f442.ala.us-east-1.emqxsl.com:8084/mqtt', {
-      clientId: 'web_' + Math.random().toString(16).substr(2, 8),
-      username: 'Olivas',
-      password: 'Jangel27'
-    });
+<!-- TAB 1: ITR -->
+<div id="tab-1" class="tab-content">
+  <div class="byte-info" id="byte-external-ITR">Esperando datos de ITR...</div>
+  <div class="alarms-house-layout">
+    <div class="alarms-container" id="alarms-external-ITR"></div>
+    <div class="house-area">
+      <div class="house-drawing">
+        <div class="roof"></div>
+        <div class="walls"></div>
+        <div class="door"></div>
+        <div class="window"></div>
+        <!-- Símbolos ITR (misma lógica, se añaden sufijo -ITR) -->
+        <div id="rectificador-ITR" class="symbol">R</div>
+        <div id="fusible-ITR" class="symbol">F</div>
+        <div id="sensor-temp-ITR" class="symbol">T</div>
+        <div id="bateria-ITR" class="symbol">B</div>
+        <div id="persona-ITR" class="symbol">P</div>
+        <div id="poste-ITR" class="symbol">L</div>
+        <div id="grupo-ITR" class="symbol">G</div>
+        <div class="tank-container">
+          <div id="diesel-tank">
+            <div id="diesel-fill"></div>
+            <div id="diesel-text">0%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-    const alarmNamesExternalOTY = [
-      "FALLA*ALIM*COM*OTY","GPO*ELEC*OPER*OTY","FALLA*FUS*DIST*A*OTY","FALLA*RECT*A*OTY",
-      "ALTA*TEMP*CX*OTY","FALLA*FUS*VOLTA*A*OTY","BAT*EN*OPER*A*OTY","BAJO*VOLTAJE*A*OTY",
-      "ALARMA LIBRE 1","ALARMA LIBRE 2","ALARMA LIBRE 3","ALARMA LIBRE 4",
-      "ALARMA LIBRE 5","ALARMA LIBRE 6","ALARMA LIBRE 7","ALARMA LIBRE 8"
-    ];
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+<script>
+  const client = mqtt.connect('wss://d4e6f442.ala.us-east-1.emqxsl.com:8084/mqtt', {
+    clientId: 'web_' + Math.random().toString(16).substr(2, 8),
+    username: 'Olivas',
+    password: 'Jangel27'
+  });
 
-    client.on('connect', () => {
-      console.log('✅ Conectado a EMQX');
-      client.subscribe('esp32/External_Alarms_OTY');
-      client.subscribe('esp32/NivelDiesel_ITR');
-    });
+  const alarmNames = [
+    "POSTE LUZ","GRUPO ELECTRÓGENO","FUSIBLE","RECTIFICADOR",
+    "ALTA TEMPERATURA","BAT 1","BAT 2","BAT 3",
+    "ALARMA 8","ALARMA 9","ALARMA 10","ALARMA 11",
+    "ALARMA 12","ALARMA 13","ALARMA 14","ALARMA 15"
+  ];
 
-    client.on('message', (topic, message) => {
-      if (topic === 'esp32/External_Alarms_OTY') {
-        const highByte = message[0];
-        const lowByte = message[1];
-        const value = (highByte << 8) | lowByte;
-        const binStr = value.toString(2).padStart(16, '0');
-        document.getElementById('byte-external-OTY').textContent = `Bytes (OTY): ${highByte}, ${lowByte} | bin: ${binStr}`;
-        updateAlarms('alarms-external-OTY', value, alarmNamesExternalOTY);
-      } else if (topic === 'esp32/NivelDiesel_ITR') {
-        updateDieselLevel(parseInt(message.toString()));
+  client.on('connect', () => {
+    console.log('Conectado a EMQX');
+    client.subscribe('esp32/External_Alarms_OTY');
+    client.subscribe('esp32/External_Alarms_ITR');
+    client.subscribe('esp32/NivelDiesel_ITR');
+  });
+
+  client.on('message', (topic, message) => {
+    const highByte = message[0];
+    const lowByte = message[1];
+    const value = (highByte << 8) | lowByte;
+    const binStr = value.toString(2).padStart(16,'0');
+
+    if(topic.includes('OTY')){
+      document.getElementById('byte-external-OTY').textContent = `Bytes recibidos: ${highByte}, ${lowByte} | bin: ${binStr}`;
+      updateAlarms('OTY', value, alarmNames);
+    } else if(topic.includes('ITR')){
+      document.getElementById('byte-external-ITR').textContent = `Bytes recibidos: ${highByte}, ${lowByte} | bin: ${binStr}`;
+      updateAlarms('ITR', value, alarmNames);
+    } else if(topic.includes('NivelDiesel')){
+      const porcentaje = parseInt(message.toString());
+      updateDieselLevel(porcentaje);
+    }
+  });
+
+  function showTab(index){
+    const tabs = document.querySelectorAll('.tab');
+    const contents = document.querySelectorAll('.tab-content');
+    tabs.forEach((tab,i)=>tab.classList.toggle('active', i===index));
+    contents.forEach((c,i)=>c.classList.toggle('active', i===index));
+  }
+
+  function updateDieselLevel(porcentaje){
+    const fill = document.getElementById('diesel-fill');
+    const text = document.getElementById('diesel-text');
+    const nivel = Math.max(0, Math.min(100, porcentaje));
+    fill.style.height = `${nivel}%`;
+    if(nivel<20) fill.style.background='linear-gradient(to top, #800000, #ff0000)';
+    else if(nivel<50) fill.style.background='linear-gradient(to top, #e6b800, #ffff00)';
+    else fill.style.background='linear-gradient(to top, #007b00, #00ff00)';
+    text.textContent = `${nivel}%`;
+  }
+
+  function updateAlarms(site, value16bit, alarmNames){
+    const symbolsMap = {
+      0: 'poste',
+      1: 'grupo',
+      2: 'fusible',
+      3: 'rectificador',
+      4: 'sensor-temp',
+      5: 'bateria',
+      6: 'bateria',
+      7: 'bateria'
+    };
+    for(let i=0;i<16;i++){
+      const bit = (value16bit >> i) & 1;
+      const symId = symbolsMap[i];
+      if(symId){
+        const el = document.getElementById(symId + (site==='ITR'?'-ITR':''));
+        if(el){
+          if(i>=5 && i<=7){
+            const b5=(value16bit>>5)&1, b6=(value16bit>>6)&1, b7=(value16bit>>7)&1;
+            el.classList.toggle('alarm', b5||b6||b7);
+          } else el.classList.toggle('alarm', !!bit);
+        }
       }
-    });
-
-    function activarAlarmaSimbolo(id) {
-      const el = document.getElementById(id);
-      if (el) el.classList.add('alarm');
     }
-
-    function desactivarAlarmaSimbolo(id) {
-      const el = document.getElementById(id);
-      if (el) el.classList.remove('alarm');
-    }
-
-    function toggleAlarmTab(tabIndex, isActive) {
-      const tabs = document.querySelectorAll('.tab');
-      if (!tabs[tabIndex]) return;
-      tabs[tabIndex].classList.toggle('alarm-active-tab', isActive);
-    }
-
-    function showTab(index) {
-      const tabs = document.querySelectorAll('.tab');
-      const contents = document.querySelectorAll('.tab-content');
-      tabs.forEach((t, i) => {
-        t.classList.toggle('active', i === index);
-        contents[i].classList.toggle('active', i === index);
-      });
-    }
-
-    function updateDieselLevel(p) {
-      const fill = document.getElementById('diesel-fill');
-      const text = document.getElementById('diesel-text');
-      const nivel = Math.max(0, Math.min(100, p));
-      fill.style.height = `${nivel}%`;
-      if (nivel < 20) fill.style.background = 'linear-gradient(to top, #800000, #ff0000)';
-      else if (nivel < 50) fill.style.background = 'linear-gradient(to top, #e6b800, #ffff00)';
-      else fill.style.background = 'linear-gradient(to top, #007b00, #00ff00)';
-      text.textContent = `${nivel}%`;
-    }
-
-    let previousAlarmStates = { 'alarms-external-OTY': null };
-
-    function updateAlarms(containerId, value16bit, alarmNames) {
-      const container = document.getElementById(containerId);
-      const prev = previousAlarmStates[containerId];
-      const current = [];
-      let hasActiveAlarm = false;
-      container.innerHTML = '';
-
-      for (let i = 0; i < 16; i++) {
-        const bit = (value16bit >> i) & 1;
-        const name = alarmNames[i];
-        current[i] = bit;
-        if (bit) hasActiveAlarm = true;
-
-        // Mapeo de alarmas a símbolos
-        if (name.includes("FUS")) bit ? activarAlarmaSimbolo('fusible') : desactivarAlarmaSimbolo('fusible');
-        if (name.includes("RECT")) bit ? activarAlarmaSimbolo('rectificador') : desactivarAlarmaSimbolo('rectificador');
-        if (name.includes("TEMP")) bit ? activarAlarmaSimbolo('sensor') : desactivarAlarmaSimbolo('sensor');
-        if (name.includes("BAT")) bit ? activarAlarmaSimbolo('bateria') : desactivarAlarmaSimbolo('bateria');
-        if (name.includes("GPO*ELEC")) bit ? activarAlarmaSimbolo('grupo') : desactivarAlarmaSimbolo('grupo');
-
-        const div = document.createElement('div');
-        div.className = `alarm ${bit ? 'active' : 'inactive'}`;
-        div.textContent = `${alarmNames[i]} → ${bit ? '🚨 ACTIVA' : '✅ OK'}`;
-        container.appendChild(div);
-      }
-
-      toggleAlarmTab(0, hasActiveAlarm);
-      previousAlarmStates[containerId] = current;
-    }
-  </script>
+  }
+</script>
 </body>
 </html>
