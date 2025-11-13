@@ -5,87 +5,247 @@
   <title>Monitor de Alarmas ESP32</title>
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; background: #f7f7f7; }
-    h2 { text-align: center; }
+    body {
+      font-family: Arial, sans-serif;
+    }
 
-    .tabs { display: flex; cursor: pointer; margin-bottom: 10px; justify-content:center; }
-    .tab { padding: 10px 20px; border: 1px solid #ccc; border-bottom: none; background-color: #f1f1f1; margin:0 2px; border-radius: 5px 5px 0 0;}
-    .tab.active { background-color: white; font-weight: bold; }
-    .tab.alarm-active-tab { background-color: red !important; color: white; }
+    .tabs {
+      display: flex;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
 
-    .tab-content { display: none; border: 1px solid #ccc; padding: 10px; background-color: #fff; border-radius:0 5px 5px 5px;}
-    .tab-content.active { display: block; }
+    .tab {
+      padding: 10px 20px;
+      border: 1px solid #ccc;
+      border-bottom: none;
+      background-color: #f1f1f1;
+    }
 
-    .alarms-house-layout { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
+    .tab.active {
+      background-color: white;
+      font-weight: bold;
+    }
 
-    .alarms-container { flex: 1; }
-    .alarm { display: flex; align-items:center; border: 1px solid #ccc; border-radius: 5px; padding: 5px 10px; margin: 5px 0; font-size: 12px; gap: 5px; }
-    .alarm svg { width: 24px; height: 24px; }
-    .active svg { fill: red; }
-    .inactive svg { fill: gray; }
+    .tab.alarm-active-tab {
+      background-color: red !important;
+      color: white;
+    }
 
-    .byte-info { font-size: 14px; font-weight: bold; margin-bottom:10px; }
+    .tab-content {
+      display: none;
+      border: 1px solid #ccc;
+      padding: 10px;
+      background-color: #d8d8d8;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .alarms-house-layout {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 20px;
+    }
+
+    .alarms-container {
+      flex: 1;
+    }
+
+    .alarm {
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 12px;
+      width: 270px;
+    }
+
+    .active {
+      background-color: #ffe5e5;
+      color: #b30000;
+      font-weight: bold;
+    }
+
+    .inactive {
+      background-color: #e5ffe5;
+      color: #007000;
+    }
+
+    .byte-info {
+      font-size: 16px;
+      font-weight: bold;
+    }
 
     /* ====== Área de la casa ====== */
-    .house-area { display: flex; flex-direction: column; align-items: center; margin-top: 20px; }
-    .house-drawing { position: relative; width: 300px; height: 350px; }
-    .tank-container { display:flex; justify-content:center; margin-top:20px; }
-    #diesel-tank { width:150px; height:75px; border:4px solid #555; border-radius:60px; background: radial-gradient(circle at 50% 30%, #fff176 0%, #FAD201 60%, #c9a801 100%); position: relative; overflow:hidden; }
-    #diesel-fill { position:absolute; bottom:0; left:0; width:100%; height:0%; background: linear-gradient(to top, #007b00, #00ff00); border-radius:0 0 40px 40px; transition: height 0.8s ease, background 0.6s ease;}
-    #diesel-text { position:absolute; width:100%; text-align:center; bottom:10px; font-weight:bold; color:#000; font-size:16px; text-shadow:1px 1px 2px rgba(255,255,255,0.9);}
-    .history-box { background:#fff; border:1px solid #ccc; padding:10px; max-height:200px; overflow-y:auto; }
-    .clear-btn { margin:5px 0; padding:5px 10px; background:#ff6666; color:#fff; border:none; border-radius:4px; cursor:pointer;}
-    .clear-btn:hover { background:#e60000; }
+    .house-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 40px;
+      position: relative;
+      width: 540px;
+    }
 
+    .house-drawing {
+      position: relative;
+      width: 540px;
+      height: 620px;
+    }
+
+    .roof {
+      position: absolute;
+      top: -60px;
+      left: 0;
+      width: 0;
+      height: 0;
+      border-left: 270px solid transparent;
+      border-right: 270px solid transparent;
+      border-bottom: 200px solid transparent;
+    }
+
+    .roof::before,
+    .roof::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      width: 2px;
+      height: 320px;
+      background-color: #000;
+    }
+
+    .roof::before {
+      left: -270px;
+      transform: rotate(57deg);
+      transform-origin: bottom right;
+    }
+
+    .roof::after {
+      right: -270px;
+      transform: rotate(-57deg);
+      transform-origin: bottom left;
+    }
+
+    .roof .base-line {
+      position: absolute;
+      bottom: 0;
+      left: -270px;
+      width: 540px;
+      height: 2px;
+      background-color: #000;
+    }
+
+    .walls {
+      position: absolute;
+      bottom: 0;
+      width: 540px;
+      height: 360px;
+      background-color: transparent;
+      border: 2px solid #000000;
+      box-sizing: border-box;
+    }
+
+    .door {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 150px;
+      height: 220px;
+      background-color: transparent;
+      border: 2px solid #000000;
+      box-sizing: border-box;
+    }
+
+    .window {
+      position: absolute;
+      bottom: 0;
+      left: 390px;
+      width: 150px;
+      height: 220px;
+      background-color: transparent;
+      border: 2px solid #000000;
+      box-sizing: border-box;
+    }
+
+    .alarm-symbol {
+      width: 40px;
+      height: 40px;
+      margin: 5px;
+      display: inline-block;
+      vertical-align: middle;
+      transition: fill 0.3s, background-color 0.3s;
+    }
+
+    .symbol-active {
+      fill: red;
+      background-color: #ffe5e5;
+      border-radius: 4px;
+    }
+
+    .symbol-inactive {
+      fill: #007000;
+    }
+
+    .symbol-container {
+      position: absolute;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      top: 10px;
+      left: 0;
+      right: 0;
+    }
   </style>
 </head>
 <body>
-  <h2>Estado de Alarmas (ESP32 vía EMQX)</h2>
+  <h2>Estado de Alarmas (desde ESP32 vía EMQX)</h2>
 
   <div class="tabs">
     <div class="tab active" onclick="showTab(0)">Alarmas Externas OTY</div>
     <div class="tab" onclick="showTab(1)">Alarmas Externas ITR</div>
   </div>
 
-  <!-- TAB OTY -->
+  <!-- TAB 0: OTY -->
   <div id="tab-0" class="tab-content active">
     <div class="byte-info" id="byte-external-OTY">Esperando datos de OTY...</div>
     <div class="alarms-house-layout">
       <div class="alarms-container" id="alarms-external-OTY"></div>
       <div class="house-area">
-        <div class="tank-container">
-          <div id="diesel-tank">
-            <div id="diesel-fill"></div>
-            <div id="diesel-text">0%</div>
-          </div>
+        <div class="house-drawing">
+          <div class="roof"></div>
+          <div class="walls"></div>
+          <div class="door"></div>
+          <div class="window"></div>
+          <div class="symbol-container" id="symbols-OTY"></div>
         </div>
       </div>
     </div>
-    <div id="history-section-OTY"></div>
   </div>
 
-  <!-- TAB ITR -->
+  <!-- TAB 1: ITR -->
   <div id="tab-1" class="tab-content">
     <div class="byte-info" id="byte-external-ITR">Esperando datos de ITR...</div>
     <div class="alarms-house-layout">
       <div class="alarms-container" id="alarms-external-ITR"></div>
       <div class="house-area">
-        <div class="tank-container">
-          <div id="diesel-tank">
-            <div id="diesel-fill"></div>
-            <div id="diesel-text">0%</div>
-          </div>
+        <div class="house-drawing">
+          <div class="roof"></div>
+          <div class="walls"></div>
+          <div class="door"></div>
+          <div class="window"></div>
+          <div class="symbol-container" id="symbols-ITR"></div>
         </div>
       </div>
     </div>
-    <div id="history-section-ITR"></div>
   </div>
 
   <script>
-    const client = mqtt.connect('wss://d4e6f442.ala.us-east-1.emqxsl.com:8084/mqtt', {
+    const client = mqtt.connect('wss://wwwwvvvvvvvvvvvv084/mqtt', {
       clientId: 'web_' + Math.random().toString(16).substr(2, 8),
-      username: 'Olivas',
-      password: 'Jangel27'
+      username: 'wwwwwwwww',
+      password: '77777777'
     });
 
     const alarmNamesExternalOTY = [
@@ -102,16 +262,46 @@
       "ALARMA LIBRE 5","ALARMA LIBRE 6","ALARMA LIBRE 7","ALARMA LIBRE 8"
     ];
 
-    const svgIcons = [
-      `<svg viewBox="0 0 24 24"><path d="M12 2L13 12H11z"/><circle cx="12" cy="18" r="2"/></svg>`, // Poste de luz (A0)
-      `<svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12"/></svg>`, // Grupo electrógeno (A1)
-      `<svg viewBox="0 0 24 24"><polygon points="12,2 2,22 22,22"/></svg>`, // Fusible (A2)
-      `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>`, // Rectificador (A3)
-      `<svg viewBox="0 0 24 24"><path d="M12 2C14 8, 18 14, 12 22C6 14, 10 8, 12 2z"/></svg>`, // Alta temperatura (A4)
-      `<svg viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>`, // Batería (A5,A6,A7)
-      `<svg viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>`, // Batería (A5,A6,A7)
-      `<svg viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>`  // Batería (A5,A6,A7)
-    ];
+    const alarmIcons = {
+      // A0 - Poste de luz
+      0: `<svg class="alarm-symbol" viewBox="0 0 24 24">
+            <line x1="12" y1="2" x2="12" y2="20" stroke="currentColor" stroke-width="2"/>
+            <circle cx="12" cy="2" r="2" fill="currentColor"/>
+          </svg>`,
+      // A1 - Motor diesel
+      1: `<svg class="alarm-symbol" viewBox="0 0 24 24">
+            <rect x="6" y="6" width="12" height="12" fill="currentColor"/>
+            <circle cx="12" cy="12" r="4" fill="#fff"/>
+          </svg>`,
+      // A2 - Fusible
+      2: `<svg class="alarm-symbol" viewBox="0 0 24 24">
+            <rect x="8" y="10" width="8" height="4" fill="currentColor"/>
+          </svg>`,
+      // A3 - Rectificador
+      3: `<svg class="alarm-symbol" viewBox="0 0 24 24">
+            <rect x="6" y="6" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"/>
+            <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2"/>
+            <line x1="6" y1="18" x2="18" y2="6" stroke="currentColor" stroke-width="2"/>
+          </svg>`,
+      // A4 - Termómetro
+      4: `<svg class="alarm-symbol" viewBox="0 0 24 24">
+            <line x1="12" y1="2" x2="12" y2="16" stroke="currentColor" stroke-width="2"/>
+            <circle cx="12" cy="18" r="4" fill="currentColor"/>
+          </svg>`,
+      // A5-A7 - Batería
+      5: `<svg class="alarm-symbol" viewBox="0 0 24 24">
+            <rect x="6" y="8" width="12" height="8" fill="currentColor"/>
+            <rect x="18" y="10" width="2" height="4" fill="currentColor"/>
+          </svg>`,
+      6: `<svg class="alarm-symbol" viewBox="0 0 24 24">
+            <rect x="6" y="8" width="12" height="8" fill="currentColor"/>
+            <rect x="18" y="10" width="2" height="4" fill="currentColor"/>
+          </svg>`,
+      7: `<svg class="alarm-symbol" viewBox="0 0 24 24">
+            <rect x="6" y="8" width="12" height="8" fill="currentColor"/>
+            <rect x="18" y="10" width="2" height="4" fill="currentColor"/>
+          </svg>`
+    };
 
     client.on('connect', () => {
       console.log('Conectado a EMQX');
@@ -125,70 +315,74 @@
         const highByte = message[0];
         const lowByte = message[1];
         const value = (highByte << 8) | lowByte;
-        const binStr = value.toString(2).padStart(16,'0');
+        const binStr = value.toString(2).padStart(16, '0');
 
-        if(topic==='esp32/External_Alarms_OTY'){
-          document.getElementById('byte-external-OTY').textContent = `Bytes recibidos (OTY): ${highByte}, ${lowByte} | bin: ${binStr}`;
-          updateAlarms('alarms-external-OTY', value, alarmNamesExternalOTY);
+        if (topic === 'esp32/External_Alarms_OTY') {
+          document.getElementById('byte-external-OTY').textContent =
+            `Bytes recibidos (OTY): ${highByte}, ${lowByte} | bin: ${binStr}`;
+          updateAlarms('alarms-external-OTY', 'symbols-OTY', value, alarmNamesExternalOTY);
         } else {
-          document.getElementById('byte-external-ITR').textContent = `Bytes recibidos (ITR): ${highByte}, ${lowByte} | bin: ${binStr}`;
-          updateAlarms('alarms-external-ITR', value, alarmNamesExternalITR);
+          document.getElementById('byte-external-ITR').textContent =
+            `Bytes recibidos (ITR): ${highByte}, ${lowByte} | bin: ${binStr}`;
+          updateAlarms('alarms-external-ITR', 'symbols-ITR', value, alarmNamesExternalITR);
         }
-      } else if (topic==='esp32/NivelDiesel_ITR'){
-        const porcentaje=parseInt(message.toString());
-        updateDieselLevel(porcentaje);
       }
     });
 
-    function showTab(index){
-      const tabs=document.querySelectorAll('.tab');
-      const contents=document.querySelectorAll('.tab-content');
-      tabs.forEach((t,i)=>t.classList.toggle('active',i===index));
-      contents.forEach((c,i)=>c.classList.toggle('active',i===index));
+    function toggleAlarmTab(tabIndex, isActive) {
+      const tabs = document.querySelectorAll('.tab');
+      if (!tabs[tabIndex]) return;
+      tabs[tabIndex].classList.toggle('alarm-active-tab', isActive);
     }
 
-    function updateDieselLevel(porcentaje){
-      const fill=document.getElementById('diesel-fill');
-      const text=document.getElementById('diesel-text');
-      const nivel=Math.max(0,Math.min(100,porcentaje));
-      fill.style.height=`${nivel}%`;
-      if(nivel<20) fill.style.background='linear-gradient(to top, #800000, #ff0000)';
-      else if(nivel<50) fill.style.background='linear-gradient(to top, #e6b800, #ffff00)';
-      else fill.style.background='linear-gradient(to top, #007b00, #00ff00)';
-      text.textContent=`${nivel}%`;
+    function showTab(index) {
+      const tabs = document.querySelectorAll('.tab');
+      const contents = document.querySelectorAll('.tab-content');
+      tabs.forEach((tab, i) => {
+        tab.classList.toggle('active', i === index);
+        contents[i].classList.toggle('active', i === index);
+      });
     }
 
-    let previousAlarmStates = { 'alarms-external-OTY': null, 'alarms-external-ITR': null };
+    let previousAlarmStates = {
+      'alarms-external-OTY': null,
+      'alarms-external-ITR': null
+    };
 
-    function updateAlarms(containerId, value16bit, alarmNames){
-      const container=document.getElementById(containerId);
-      const prev=previousAlarmStates[containerId];
-      const current=[];
-      let hasActive=false;
-      container.innerHTML='';
+    function updateAlarms(containerId, symbolContainerId, value16bit, alarmNames) {
+      const container = document.getElementById(containerId);
+      const symbolsContainer = document.getElementById(symbolContainerId);
+      const prev = previousAlarmStates[containerId];
+      const current = [];
+      let hasActiveAlarm = false;
 
-      for(let i=0;i<16;i++){
-        const bit=(value16bit>>i)&1;
-        current[i]=bit;
-        if(bit) hasActive=true;
+      container.innerHTML = '';
+      symbolsContainer.innerHTML = '';
 
-        const div=document.createElement('div');
-        div.className='alarm '+(bit?'active':'inactive');
-        let icon='';
-        if(i<=4) icon=svgIcons[i];
-        if(i>=5 && i<=7 && bit) icon=svgIcons[5]; // batería
-        div.innerHTML=`${icon} A${i} - ${alarmNames[i]}: ${bit?'🚨 Alarma activa':'✅ Sin alarma'}`;
+      for (let i = 0; i < 16; i++) {
+        const bit = (value16bit >> i) & 1;
+        current[i] = bit;
+        if (bit) hasActiveAlarm = true;
+
+        const div = document.createElement('div');
+        div.className = 'alarm ' + (bit ? 'active' : 'inactive');
+        div.textContent = `A${i} - ${alarmNames[i]}: ${bit ? '🚨 Alarma activa' : '✅ Sin alarma'}`;
         container.appendChild(div);
+
+        // Mostrar símbolo en el área de la casa
+        if (alarmIcons[i]) {
+          const wrapper = document.createElement('div');
+          wrapper.innerHTML = alarmIcons[i];
+          const svg = wrapper.firstChild;
+          svg.classList.add(bit ? 'symbol-active' : 'symbol-inactive');
+          svg.title = alarmNames[i];
+          symbolsContainer.appendChild(svg);
+        }
       }
-      previousAlarmStates[containerId]=current;
 
-      if(containerId==='alarms-external-OTY') toggleAlarmTab(0, hasActive);
-      if(containerId==='alarms-external-ITR') toggleAlarmTab(1, hasActive);
-    }
-
-    function toggleAlarmTab(tabIndex,isActive){
-      const tabs=document.querySelectorAll('.tab');
-      tabs[tabIndex].classList.toggle('alarm-active-tab',isActive);
+      previousAlarmStates[containerId] = current;
+      if (containerId === 'alarms-external-OTY') toggleAlarmTab(0, hasActiveAlarm);
+      if (containerId === 'alarms-external-ITR') toggleAlarmTab(1, hasActiveAlarm);
     }
   </script>
 </body>
