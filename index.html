@@ -4,408 +4,290 @@
   <meta charset="UTF-8">
   <title>Monitor de Alarmas ESP32</title>
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
-
   <style>
     body { font-family: Arial, sans-serif; }
 
-    .tabs {
-      display: flex; cursor: pointer; margin-bottom: 10px;
-    }
-
-    .tab {
-      padding: 10px 20px;
-      border: 1px solid #ccc;
-      border-bottom: none;
-      background-color: #f1f1f1;
-    }
-
+    .tabs { display: flex; cursor: pointer; margin-bottom: 10px; }
+    .tab { padding: 10px 20px; border: 1px solid #ccc; border-bottom: none; background-color: #f1f1f1; }
     .tab.active { background-color: white; font-weight: bold; }
     .tab.alarm-active-tab { background-color: red !important; color: white; }
-
-    .tab-content {
-      display: none; border: 1px solid #ccc;
-      padding: 10px; background-color: #d8d8d8;
-    }
-
+    .tab-content { display: none; border: 1px solid #ccc; padding: 10px; background-color: #d8d8d8; }
     .tab-content.active { display: block; }
-
-    .alarms-house-layout {
-      display: flex; justify-content: space-between;
-      align-items: flex-start; gap: 20px;
-    }
-
+    .alarms-house-layout { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
     .alarms-container { flex: 1; }
-
-    .alarm {
-      border: 1px solid #ccc; border-radius: 5px;
-      padding: 10px; margin: 10px 0; font-size: 12px; width: 270px;
-    }
-
+    .alarm { border: 1px solid #ccc; border-radius: 5px; padding: 10px; margin: 10px 0; font-size: 12px; width: 270px; }
     .active { background-color: #ffe5e5; color: #b30000; font-weight: bold; }
     .inactive { background-color: #e5ffe5; color: #007000; }
-
     .byte-info { font-size: 16px; font-weight: bold; }
 
-    /* ====== CASA ====== */
+    /* ====== Área de la casa ====== */
     .house-area { display: flex; flex-direction: column; align-items: center; margin-top: 40px; }
+    .house-drawing { position: relative; width: 540px; height: 620px; top: -70px; left: -50px; }
 
-    .house-drawing {
-      position: relative; width: 540px; height: 620px;
-      top: -70px; left: -50px;
-    }
-
-    .roof {
-      position: absolute; top: -60px; left: 0; width: 0; height: 0;
-      border-left: 270px solid transparent;
-      border-right: 270px solid transparent;
-    }
-
-    .roof::before, .roof::after {
-      content: ""; position: absolute; top: 0; width: 2px; height: 320px; background-color: #000;
-    }
-
+    .roof { position: absolute; top: -60px; left: 0; width: 0; height: 0; border-left: 270px solid transparent; border-right: 270px solid transparent; border-bottom: 200px solid transparent; }
+    .roof::before, .roof::after { content: ""; position: absolute; top: 0; width: 2px; height: 320px; background-color: #000; }
     .roof::before { left: -270px; transform: rotate(57deg); transform-origin: bottom right; }
     .roof::after { right: -270px; transform: rotate(-57deg); transform-origin: bottom left; }
+    .roof .base-line { position: absolute; bottom: 0; left: -270px; width: 540px; height: 2px; background-color: #000; }
+    .walls { position: absolute; bottom: 0; width: 540px; height: 360px; background-color: transparent; border: 2px solid #000000; box-sizing: border-box; }
+    .door { position: absolute; bottom: 0; left: 0; width: 150px; height: 220px; background-color: transparent; border: 2px solid #000000; box-sizing: border-box; }
+    .window { position: absolute; bottom: 0; left: 390px; width: 150px; height: 220px; background-color: transparent; border: 2px solid #000000; box-sizing: border-box; }
 
-    .roof .base-line {
-      position: absolute; bottom: 0; left: -270px; width: 540px; height: 2px; background-color: #000;
-    }
+    .tank-container { display: flex; justify-content: center; align-items: center; }
+    #diesel-tank { position: absolute; bottom: -220px; left: -60px; width: 150px; height: 75px; border: 4px solid #555; border-radius: 60px; background: radial-gradient(circle at 50% 30%, #fff176 0%, #FAD201 60%, #c9a801 100%); box-shadow: inset -6px 0 10px rgba(0, 0, 0, 0.3), inset 6px 0 10px rgba(255, 255, 255, 0.5); overflow: hidden; }
+    #diesel-fill { position: absolute; bottom: 0; left: 0; width: 100%; height: 0%; background: linear-gradient(to top, #007b00, #00ff00); border-radius: 0 0 40px 40px; transition: height 0.8s ease, background 0.6s ease; box-shadow: inset 0 2px 5px rgba(255, 255, 255, 0.5); }
+    #diesel-text { position: absolute; width: 100%; text-align: center; bottom: 10px; font-weight: bold; color: #000; font-size: 20px; text-shadow: 1px 1px 2px rgba(255,255,255,0.9); }
 
-    .walls {
-      position: absolute; bottom: 0; width: 540px; height: 360px;
-      border: 2px solid #000000; background-color: transparent;
-    }
+    .history-box { background: #fff; border: 1px solid #ccc; padding: 10px; max-height: 200px; overflow-y: auto; }
+    .clear-btn { margin: 5px 0; padding: 5px 10px; background: #ff6666; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+    .clear-btn:hover { background: #e60000; }
 
-    .door {
-      position: absolute; bottom: 0; left: 0;
-      width: 150px; height: 220px; border: 2px solid #000;
-    }
-
-    .window {
-      position: absolute; bottom: 0; left: 390px;
-      width: 150px; height: 220px; border: 2px solid #000;
-    }
-
-    /* ====== SIMBOLOS SVG ====== */
-    svg.simbolo {
-      position: absolute;
-      width: 90px; height: 90px;
-      stroke-width: 3;
-      stroke: black; fill: none;
-      transition: all 0.3s ease;
-      pointer-events: none;
-    }
-
-    .symbol-active {
-      stroke: red !important;
-      fill: red !important;
-    }
-
-    /* Diesel */
-    #diesel-tank {
-      position: absolute; bottom: -220px; left: -60px;
-      width: 150px; height: 75px;
-      border: 4px solid #555; border-radius: 60px;
-      background: radial-gradient(circle at 50% 30%, #fff176 0%, #FAD201 60%, #c9a801 100%);
-    }
-
-    #diesel-fill {
-      position: absolute; bottom: 0; left: 0;
-      width: 100%; height: 0%;
-      background: linear-gradient(to top, #007b00, #00ff00);
-      transition: height 0.8s ease;
-    }
-
-    #diesel-text {
-      position: absolute; width: 100%; text-align: center; bottom: 10px;
-      font-weight: bold; font-size: 20px;
-    }
+    /* ====== Iconos de la casa ====== */
+    .icon { position: absolute; font-size: 24px; transition: color 0.5s; color: black; }
+    .icon.active { color: red; }
+    .icon.generator { top: 10px; left: 20px; }
+    .icon.transformer { top: 10px; left: 100px; }
+    .icon.switch { top: 10px; left: 200px; }
+    .icon.battery { top: 300px; left: 20px; }
+    .icon.rectifier { top: 300px; left: 100px; }
+    .icon.ground { top: 300px; left: 200px; }
+    .icon.transfer { top: 150px; left: 50px; }
+    .icon.thermometer { top: 150px; left: 150px; }
+    .icon.person { top: 250px; left: 250px; }
+    .icon.arrow { top: 50px; left: 250px; }
   </style>
-
 </head>
 <body>
-  <h2>Estado de Alarmas (desde ESP32 vía EMQX)</h2>
+<h2>Estado de Alarmas (desde ESP32 vía EMQX)</h2>
 
-  <div class="tabs">
-    <div class="tab active" onclick="showTab(0)">Alarmas Externas OTY</div>
-    <div class="tab" onclick="showTab(1)">Alarmas Externas ITR</div>
-  </div>
+<div class="tabs">
+  <div class="tab active" onclick="showTab(0)">Alarmas Externas OTY</div>
+  <div class="tab" onclick="showTab(1)">Alarmas Externas ITR</div>
+</div>
 
-  <!-- TAB 0 -->
-  <div id="tab-0" class="tab-content active">
+<!-- TAB OTY -->
+<div id="tab-0" class="tab-content active">
+  <div class="byte-info" id="byte-external-OTY">Esperando datos de OTY...</div>
+  <div class="alarms-house-layout">
+    <div class="alarms-container" id="alarms-external-OTY"></div>
+    <div class="house-area">
+      <div class="house-drawing">
+        <div class="roof"></div>
+        <div class="walls"></div>
+        <div class="door"></div>
+        <div class="window"></div>
 
-    <div class="byte-info" id="byte-external-OTY">Esperando datos de OTY...</div>
-
-    <div class="alarms-house-layout">
-
-      <div class="alarms-container" id="alarms-external-OTY"></div>
-
-      <!-- CASA OTY -->
-      <div class="house-area">
-        <div class="house-drawing">
-
-          <div class="roof"><div class="base-line"></div></div>
-          <div class="walls"></div>
-          <div class="door"></div>
-          <div class="window"></div>
-
-          <!-- SIMBOLOS OTY -->
-          <svg id="oty-ac" class="simbolo" style="top:40px; left:220px;">
-            <line x1="0" y1="40" x2="20" y2="40"/>
-            <path d="M20 40 Q 40 10 60 40 T 100 40"/>
-            <line x1="100" y1="40" x2="120" y2="40"/>
-          </svg>
-
-          <svg id="oty-generator" class="simbolo" style="top:120px; left:160px;">
-            <rect x="20" y="20" width="100" height="60"/>
-            <circle cx="70" cy="50" r="20"/>
-            <line x1="70" y1="50" x2="70" y2="25"/>
-            <line x1="70" y1="50" x2="95" y2="50"/>
-            <line x1="70" y1="50" x2="70" y2="75"/>
-            <line x1="70" y1="50" x2="45" y2="50"/>
-          </svg>
-
-          <svg id="oty-switch" class="simbolo" style="top:240px; left:320px;">
-            <line x1="0" y1="50" x2="40" y2="50"/>
-            <line x1="80" y1="50" x2="120" y2="50"/>
-            <line x1="40" y1="50" x2="80" y2="20"/>
-          </svg>
-
-          <svg id="oty-rectifier" class="simbolo" style="top:310px; left:200px;">
-            <rect x="20" y="20" width="60" height="60"/>
-            <polygon points="20,20 45,20 20,45"/>
-            <line x1="45" y1="20" x2="45" y2="45"/>
-            <polygon points="80,20 55,20 80,45"/>
-            <line x1="55" y1="20" x2="55" y2="45"/>
-          </svg>
-
-          <svg id="oty-temp" class="simbolo" style="top:390px; left:120px;">
-            <line x1="60" y1="10" x2="60" y2="70"/>
-            <circle cx="60" cy="70" r="15"/>
-          </svg>
-
-          <svg id="oty-ground" class="simbolo" style="top:500px; left:250px;">
-            <line x1="60" y1="10" x2="60" y2="30"/>
-            <line x1="40" y1="30" x2="80" y2="30"/>
-            <line x1="45" y1="40" x2="75" y2="40"/>
-            <line x1="50" y1="50" x2="70" y2="50"/>
-          </svg>
-
-          <svg id="oty-battery" class="simbolo" style="top:170px; left:350px;">
-            <line x1="10" y1="40" x2="40" y2="40"/>
-            <line x1="40" y1="20" x2="40" y2="60"/>
-            <line x1="60" y1="30" x2="60" y2="50"/>
-            <line x1="60" y1="40" x2="100" y2="40"/>
-          </svg>
-
-        </div>
+        <!-- Iconos -->
+        <div class="icon generator" title="Generador">⚡</div>
+        <div class="icon transformer" title="Transformador">🔌</div>
+        <div class="icon switch" title="Interruptor">🔀</div>
+        <div class="icon battery" title="Batería">🔋</div>
+        <div class="icon rectifier" title="Rectificador">🔧</div>
+        <div class="icon ground" title="Barra de Tierra">🟢</div>
+        <div class="icon transfer" title="Transfer">🔄</div>
+        <div class="icon thermometer" title="Temperatura">🌡️</div>
+        <div class="icon person" title="Persona">🧍</div>
+        <div class="icon arrow" title="Flecha">➡️</div>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- TAB 1 -->
-  <div id="tab-1" class="tab-content">
+<!-- TAB ITR -->
+<div id="tab-1" class="tab-content">
+  <div class="byte-info" id="byte-external-ITR">Esperando datos de ITR...</div>
+  <div class="alarms-house-layout">
+    <div class="alarms-container" id="alarms-external-ITR"></div>
+    <div class="house-area">
+      <div class="house-drawing">
+        <div class="roof"></div>
+        <div class="walls"></div>
+        <div class="door"></div>
+        <div class="window"></div>
 
-    <div class="byte-info" id="byte-external-ITR">Esperando datos de ITR...</div>
-
-    <div class="alarms-house-layout">
-      <div class="alarms-container" id="alarms-external-ITR"></div>
-
-      <!-- CASA ITR -->
-      <div class="house-area">
-        <div class="house-drawing">
-
-          <div class="roof"><div class="base-line"></div></div>
-          <div class="walls"></div>
-          <div class="door"></div>
-          <div class="window"></div>
-
-          <!-- SIMBOLOS ITR -->
-          <svg id="itr-ac" class="simbolo" style="top:40px; left:220px;">
-            <line x1="0" y1="40" x2="20" y2="40"/>
-            <path d="M20 40 Q 40 10 60 40 T 100 40"/>
-            <line x1="100" y1="40" x2="120" y2="40"/>
-          </svg>
-
-          <svg id="itr-generator" class="simbolo" style="top:120px; left:160px;">
-            <rect x="20" y="20" width="100" height="60"/>
-            <circle cx="70" cy="50" r="20"/>
-            <line x1="70" y1="50" x2="70" y2="25"/>
-            <line x1="70" y1="50" x2="95" y2="50"/>
-            <line x1="70" y1="50" x2="70" y2="75"/>
-            <line x1="70" y1="50" x2="45" y2="50"/>
-          </svg>
-
-          <svg id="itr-switch" class="simbolo" style="top:240px; left:320px;">
-            <line x1="0" y1="50" x2="40" y2="50"/>
-            <line x1="80" y1="50" x2="120" y2="50"/>
-            <line x1="40" y1="50" x2="80" y2="20"/>
-          </svg>
-
-          <svg id="itr-rectifier" class="simbolo" style="top:310px; left:200px;">
-            <rect x="20" y="20" width="60" height="60"/>
-            <polygon points="20,20 45,20 20,45"/>
-            <line x1="45" y1="20" x2="45" y2="45"/>
-            <polygon points="80,20 55,20 80,45"/>
-            <line x1="55" y1="20" x2="55" y2="45"/>
-          </svg>
-
-          <svg id="itr-temp" class="simbolo" style="top:390px; left:120px;">
-            <line x1="60" y1="10" x2="60" y2="70"/>
-            <circle cx="60" cy="70" r="15"/>
-          </svg>
-
-          <svg id="itr-ground" class="simbolo" style="top:500px; left:250px;">
-            <line x1="60" y1="10" x2="60" y2="30"/>
-            <line x1="40" y1="30" x2="80" y2="30"/>
-            <line x1="45" y1="40" x2="75" y2="40"/>
-            <line x1="50" y1="50" x2="70" y2="50"/>
-          </svg>
-
-          <svg id="itr-battery" class="simbolo" style="top:170px; left:350px;">
-            <line x1="10" y1="40" x2="40" y2="40"/>
-            <line x1="40" y1="20" x2="40" y2="60"/>
-            <line x1="60" y1="30" x2="60" y2="50"/>
-            <line x1="60" y1="40" x2="100" y2="40"/>
-          </svg>
-
-          <!-- Tanque diesel ITR -->
+        <div class="tank-container">
           <div id="diesel-tank">
             <div id="diesel-fill"></div>
             <div id="diesel-text">0%</div>
           </div>
-
         </div>
+
+        <!-- Iconos -->
+        <div class="icon generator" title="Generador">⚡</div>
+        <div class="icon transformer" title="Transformador">🔌</div>
+        <div class="icon switch" title="Interruptor">🔀</div>
+        <div class="icon battery" title="Batería">🔋</div>
+        <div class="icon rectifier" title="Rectificador">🔧</div>
+        <div class="icon ground" title="Barra de Tierra">🟢</div>
+        <div class="icon transfer" title="Transfer">🔄</div>
+        <div class="icon thermometer" title="Temperatura">🌡️</div>
+        <div class="icon person" title="Persona">🧍</div>
+        <div class="icon arrow" title="Flecha">➡️</div>
       </div>
     </div>
   </div>
+</div>
 
-  <script>
-
-  /* MQTT */
-  const client = mqtt.connect('wss://d4e6f442.ala.us-east-1.emqxsl.com:8084/mqtt', {
+<script>
+    const client = mqtt.connect('wss://d4e6f442.ala.us-east-1.emqxsl.com:8084/mqtt', {
     clientId: 'web_' + Math.random().toString(16).substr(2, 8),
     username: 'Olivas',
     password: 'Jangel27'
   });
 
   const alarmNamesExternalOTY = [
-      "FALLA ALIM COM","GPO ELEC OPER","FALLA FUS DIST","FALLA RECT",
-      "ALTA TEMP","ROBOTIERRAS","BAT 6","BAT 7",
-      "BAT 8","LIBRE","LIBRE","LIBRE","LIBRE","LIBRE","LIBRE","LIBRE"
+    "FALLA*ALIM*COM*OTY","GPO*ELEC*OPER*OTY","FALLA*FUS*DIST*A*OTY","FALLA*RECT*A*OTY",
+    "ALTA*TEMP*CX*OTY","FALLA*FUS*VOLTA*A*OTY","BAT*EN*OPER*A*OTY","BAJO*VOLTAJE*A*OTY",
+    "ALARMA LIBRE 1","ALARMA LIBRE 2","ALARMA LIBRE 3","ALARMA LIBRE 4",
+    "ALARMA LIBRE 5","ALARMA LIBRE 6","ALARMA LIBRE 7","ALARMA LIBRE 8"
   ];
 
-  const alarmNamesExternalITR = [...alarmNamesExternalOTY];
+  const alarmNamesExternalITR = [
+    "FALLA*ALIM*COM*ITR","GPO*ELEC*OPER*ITR","FALLA*FUS*DIST*A*ITR","FALLA*RECT*A*ITR",
+    "ALTA*TEMP*CX*ITR","FALLA*FUS*VOLTA*A*ITR","BAT*EN*OPER*A*ITR","BAJO*VOLTAJE*A*ITR",
+    "ALARMA LIBRE 1","ALARMA LIBRE 2","ALARMA LIBRE 3","ALARMA LIBRE 4",
+    "ALARMA LIBRE 5","ALARMA LIBRE 6","ALARMA LIBRE 7","ALARMA LIBRE 8"
+  ];
 
   client.on('connect', () => {
+    console.log('Conectado a EMQX');
     client.subscribe('esp32/External_Alarms_OTY');
     client.subscribe('esp32/External_Alarms_ITR');
     client.subscribe('esp32/NivelDiesel_ITR');
   });
 
   client.on('message', (topic, message) => {
-    if (topic.includes("External_Alarms")) {
-
+    if (topic === 'esp32/External_Alarms_OTY' || topic === 'esp32/External_Alarms_ITR') {
       const highByte = message[0];
       const lowByte = message[1];
       const value = (highByte << 8) | lowByte;
-      const binStr = value.toString(2).padStart(16, "0");
 
+      const binStr = value.toString(2).padStart(16, '0');
       if (topic === 'esp32/External_Alarms_OTY') {
-        updateAlarms("alarms-external-OTY", value, alarmNamesExternalOTY);
-        updateSymbols("oty", value);
-        document.getElementById("byte-external-OTY").textContent =
-          `Bytes OTY: ${highByte}, ${lowByte} | bin: ${binStr}`;
+        document.getElementById('byte-external-OTY').textContent = `Bytes recibidos (OTY): ${highByte}, ${lowByte} | bin: ${binStr}`;
+        updateAlarms('alarms-external-OTY', value, alarmNamesExternalOTY);
+      } else {
+        document.getElementById('byte-external-ITR').textContent = `Bytes recibidos (ITR): ${highByte}, ${lowByte} | bin: ${binStr}`;
+        updateAlarms('alarms-external-ITR', value, alarmNamesExternalITR);
       }
-
-      if (topic === 'esp32/External_Alarms_ITR') {
-        updateAlarms("alarms-external-ITR", value, alarmNamesExternalITR);
-        updateSymbols("itr", value);
-        document.getElementById("byte-external-ITR").textContent =
-          `Bytes ITR: ${highByte}, ${lowByte} | bin: ${binStr}`;
-      }
-    }
-
-    if (topic === "esp32/NivelDiesel_ITR") {
-      const pct = parseInt(message.toString());
-      updateDieselLevel(pct);
+    } else if (topic === 'esp32/NivelDiesel_ITR') {
+      const porcentaje = parseInt(message.toString());
+      updateDieselLevel(porcentaje);
     }
   });
 
-  function updateDieselLevel(porc) {
-    const nivel = Math.max(0, Math.min(100, porc));
-    document.getElementById("diesel-fill").style.height = `${nivel}%`;
-    document.getElementById("diesel-text").textContent = `${nivel}%`;
+  function toggleAlarmTab(tabIndex, isActive) {
+    const tabs = document.querySelectorAll('.tab');
+    if (!tabs[tabIndex]) return;
+    tabs[tabIndex].classList.toggle('alarm-active-tab', isActive);
   }
 
-  function showTab(n) {
-    document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i===n));
-    document.querySelectorAll('.tab-content').forEach((c, i) => c.classList.toggle('active', i===n));
+  function showTab(index) {
+    const tabs = document.querySelectorAll('.tab');
+    const contents = document.querySelectorAll('.tab-content');
+    tabs.forEach((tab, i) => { tab.classList.toggle('active', i===index); contents[i].classList.toggle('active', i===index); });
   }
 
-  let previousAlarmStates = {
-    'alarms-external-OTY': null,
-    'alarms-external-ITR': null
-  };
+  function updateDieselLevel(porcentaje) {
+    const fill = document.getElementById('diesel-fill');
+    const text = document.getElementById('diesel-text');
+    const nivel = Math.max(0, Math.min(100, porcentaje));
+    fill.style.height = `${nivel}%`;
+    if (nivel < 20) fill.style.background = 'linear-gradient(to top, #800000, #ff0000)';
+    else if (nivel < 50) fill.style.background = 'linear-gradient(to top, #e6b800, #ffff00)';
+    else fill.style.background = 'linear-gradient(to top, #007b00, #00ff00)';
+    text.textContent = `${nivel}%`;
+  }
+
+  // Historial
+  const alarmHistory = JSON.parse(localStorage.getItem('alarmHistory') || '{}');
+  if (!alarmHistory['OTY']) alarmHistory['OTY'] = [];
+  if (!alarmHistory['ITR']) alarmHistory['ITR'] = [];
+
+  function createHistoryContainers() {
+    ['OTY','ITR'].forEach(site=>{
+      const tab = document.getElementById(site==='OTY'?'tab-0':'tab-1');
+      const div = document.createElement('div');
+      div.innerHTML = `<h3>📜 Historial de Alarmas ${site}</h3><button class="clear-btn" onclick="clearHistory('${site}')">🧹 Limpiar Historial ${site}</button><ul id="history-${site}" class="history-box"></ul>`;
+      tab.appendChild(div);
+    });
+  }
+  createHistoryContainers();
+
+  function renderHistory(site) {
+    const list = document.getElementById(`history-${site}`);
+    list.innerHTML = '';
+    alarmHistory[site].forEach(entry => addHistoryEntry(site, entry));
+  }
+
+  function addHistoryEntry(site, entry) {
+    const list = document.getElementById(`history-${site}`);
+    const li = document.createElement('li');
+    li.textContent = `[${entry.time}] ${entry.name} → ${entry.state}`;
+    list.prepend(li);
+  }
+
+  function logAlarmChange(site, name, state) {
+    const timestamp = new Date().toLocaleString();
+    const entry = { time: timestamp, name, state };
+    alarmHistory[site].push(entry);
+    localStorage.setItem('alarmHistory', JSON.stringify(alarmHistory));
+    addHistoryEntry(site, entry);
+  }
+
+  function clearHistory(site) {
+    if (confirm(`¿Seguro que quieres borrar el historial de ${site}?`)) {
+      alarmHistory[site] = [];
+      localStorage.setItem('alarmHistory', JSON.stringify(alarmHistory));
+      renderHistory(site);
+    }
+  }
+
+  renderHistory('OTY'); renderHistory('ITR');
+
+  let previousAlarmStates = { 'alarms-external-OTY': null, 'alarms-external-ITR': null };
 
   function updateAlarms(containerId, value16bit, alarmNames) {
     const container = document.getElementById(containerId);
     const prev = previousAlarmStates[containerId];
     const current = [];
-    let hasActive = false;
-    container.innerHTML = "";
+    let hasActiveAlarm = false;
+    container.innerHTML = '';
 
-    for (let i=0; i<16; i++){
+    // Mapeo alarmas → iconos
+    const alarmToIconMap = {
+      "FALLA*ALIM*COM*OTY": "generator", "GPO*ELEC*OPER*OTY": "transformer", "FALLA*FUS*DIST*A*OTY": "switch",
+      "FALLA*RECT*A*OTY": "rectifier", "ALTA*TEMP*CX*OTY": "thermometer", "BAT*EN*OPER*A*OTY": "battery",
+      "BAJO*VOLTAJE*A*OTY": "battery", "ALARMA LIBRE 1": "ground", "ALARMA LIBRE 2": "transfer",
+      "ALARMA LIBRE 3": "person", "ALARMA LIBRE 4": "arrow"
+    };
+
+    for (let i=0;i<16;i++){
       const bit = (value16bit >> i) & 1;
       current[i] = bit;
-      if (bit) hasActive = true;
-
-      const div = document.createElement("div");
-      div.className = "alarm " + (bit ? "active" : "inactive");
-      div.textContent = `A${i} - ${alarmNames[i]}: ${bit ? "ACTIVA" : "OK"}`;
+      const alarmName = alarmNames[i] || `Alarma ${i}`;
+      const div = document.createElement('div');
+      div.className = 'alarm ' + (bit?'active':'inactive');
+      div.textContent = alarmName;
       container.appendChild(div);
+      if (bit) hasActiveAlarm = true;
+
+      // Actualizar icono
+      const iconName = alarmToIconMap[alarmName];
+      if(iconName){
+        const icon = container.parentNode.querySelector(`.icon.${iconName}`);
+        if(icon) icon.classList.toggle('active', bit);
+      }
+
+      // Log historial
+      if(prev && prev[i]!==bit){
+        logAlarmChange(containerId.includes('OTY')?'OTY':'ITR', alarmName, bit?'ACTIVA':'INACTIVA');
+      }
     }
 
     previousAlarmStates[containerId] = current;
-
-    if (containerId === "alarms-external-OTY")
-      document.querySelectorAll(".tab")[0].classList.toggle("alarm-active-tab", hasActive);
-
-    if (containerId === "alarms-external-ITR")
-      document.querySelectorAll(".tab")[1].classList.toggle("alarm-active-tab", hasActive);
+    toggleAlarmTab(containerId.includes('OTY')?0:1, hasActiveAlarm);
   }
-
-  /* ====== MAPEADO DE SÍMBOLOS ====== */
-
-  const symbolMap = {
-    0: "ac",
-    1: "generator",
-    2: "switch",
-    3: "rectifier",
-    4: "temp",
-    5: "ground",
-    6: "battery",
-    7: "battery",
-    8: "battery"
-  };
-
-  function updateSymbols(site, value16bit) {
-
-    /* Apagar todos primero */
-    document.querySelectorAll(`#tab-${site === "oty" ? "0" : "1"} .simbolo`)
-            .forEach(s => s.classList.remove("symbol-active"));
-
-    /* Activar los necesarios */
-    for (let bit = 0; bit < 16; bit++) {
-      if ((value16bit >> bit) & 1) {
-        const id = `${site}-${symbolMap[bit]}`;
-        const e = document.getElementById(id);
-        if (e) e.classList.add("symbol-active");
-      }
-    }
-  }
-
-  </script>
-
+</script>
 </body>
 </html>
