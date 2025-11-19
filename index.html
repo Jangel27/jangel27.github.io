@@ -5,249 +5,464 @@
   <title>Monitor de Alarmas ESP32</title>
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; }
+    body {
+      font-family: Arial, sans-serif;
+    }
 
-    .tabs { display: flex; cursor: pointer; margin-bottom: 10px; }
+    .tabs {
+      display: flex;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+
     .tab {
       padding: 10px 20px;
       border: 1px solid #ccc;
       border-bottom: none;
       background-color: #f1f1f1;
     }
-    .tab.active { background-color: white; font-weight: bold; }
-    .tab.alarm-active-tab { background-color: red !important; color: white; }
 
-    .tab-content { display: none; border: 1px solid #ccc; padding: 10px; background-color: #d8d8d8; }
-    .tab-content.active { display: block; }
-
-    .alarms-house-layout { display: flex; gap: 20px; }
-    .alarms-container { flex: 1; }
-    .alarm { border: 1px solid #ccc; border-radius: 5px; padding: 10px; margin: 10px 0; font-size: 12px; width: 270px; }
-    .active { background-color: #ffe5e5; color: #b30000; font-weight: bold; }
-    .inactive { background-color: #e5ffe5; color: #007000; }
-    .byte-info { font-size: 16px; font-weight: bold; }
-
-    /* ====== Casa con lineas ====== */
-    .house-area { position: relative; width: 540px; height: 620px; margin-top: 40px; }
-    .house-drawing { position: relative; width: 100%; height: 100%; }
-    .roof, .walls, .door, .window {
-      position: absolute; border: 2px solid #000; box-sizing: border-box; background: transparent;
+    .tab.active {
+      background-color: white;
+      font-weight: bold;
     }
-    .roof { top: -60px; left: 0; width: 540px; height: 200px; border-left: 270px solid transparent; border-right: 270px solid transparent; border-bottom: 200px solid transparent; }
-    .walls { bottom: 0; width: 540px; height: 360px; }
-    .door { bottom: 0; left: 0; width: 150px; height: 220px; }
-    .window { bottom: 0; left: 390px; width: 150px; height: 220px; }
 
-    /* ====== Iconos ====== */
-    .icon { position: absolute; width: 40px; height: 40px; transition: filter 0.3s ease; }
-    .icon.red { filter: hue-rotate(0deg) saturate(100%) brightness(0.5) drop-shadow(0 0 5px red); }
+    .tab.alarm-active-tab {
+      background-color: red !important;
+      color: white;
+    }
 
-    /* Historial */
-    .history-box { background: #fff; border: 1px solid #ccc; padding: 10px; max-height: 200px; overflow-y: auto; margin-top:10px; }
-    .clear-btn { margin: 5px 0; padding: 5px 10px; background: #ff6666; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
-    .clear-btn:hover { background: #e60000; }
+    .tab-content {
+      display: none;
+      border: 1px solid #ccc;
+      padding: 10px;
+      background-color: #d8d8d8;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .alarms-house-layout {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 20px;
+    }
+
+    .alarms-container {
+      flex: 1;
+    }
+
+    .alarm {
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 12px;
+      width: 270px;
+    }
+
+    .active {
+      background-color: #ffe5e5;
+      color: #b30000;
+      font-weight: bold;
+    }
+
+    .inactive {
+      background-color: #e5ffe5;
+      color: #007000;
+    }
+
+    .byte-info {
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    /* ====== Área de la casa ====== */
+    .house-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 40px;
+    }
+
+    .house-drawing {
+      position: relative;
+      width: 540px;
+      height: 620px;
+      top: -70px;
+      left: -50px;
+    }
+
+    .roof {
+      position: absolute;
+      top: -60px;
+      left: 0;
+      width: 0;
+      height: 0;
+      border-left: 270px solid transparent;
+      border-right: 270px solid transparent;
+      border-bottom: 200px solid transparent;
+    }
+
+    .roof::before,
+    .roof::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      width: 2px;
+      height: 320px;
+      background-color: #000;
+    }
+
+    .roof::before {
+      left: -270px;
+      transform: rotate(57deg);
+      transform-origin: bottom right;
+    }
+
+    .roof::after {
+      right: -270px;
+      transform: rotate(-57deg);
+      transform-origin: bottom left;
+    }
+
+    .roof .base-line {
+      position: absolute;
+      bottom: 0;
+      left: -270px;
+      width: 540px;
+      height: 2px;
+      background-color: #000;
+    }
+
+    .walls {
+      position: absolute;
+      bottom: 0;
+      width: 540px;
+      height: 360px;
+      background-color: transparent;
+      border: 2px solid #000000;
+      box-sizing: border-box;
+    }
+
+    .door {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 150px;
+      height: 220px;
+      background-color: transparent;
+      border: 2px solid #000000;
+      box-sizing: border-box;
+    }
+
+    .window {
+      position: absolute;
+      bottom: 0;
+      left: 390px;
+      width: 150px;
+      height: 220px;
+      background-color: transparent;
+      border: 2px solid #000000;
+      box-sizing: border-box;
+    }
+
+    .tank-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #diesel-tank {
+      position: absolute;
+      bottom: -220px;
+      left: -60px;
+      width: 150px;
+      height: 75px;
+      border: 4px solid #555;
+      border-radius: 60px;
+      background: radial-gradient(circle at 50% 30%, #fff176 0%, #FAD201 60%, #c9a801 100%);
+      box-shadow: inset -6px 0 10px rgba(0, 0, 0, 0.3),
+                  inset 6px 0 10px rgba(255, 255, 255, 0.5);
+      overflow: hidden;
+    }
+
+    #diesel-fill {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 0%;
+      background: linear-gradient(to top, #007b00, #00ff00);
+      border-radius: 0 0 40px 40px;
+      transition: height 0.8s ease, background 0.6s ease;
+      box-shadow: inset 0 2px 5px rgba(255, 255, 255, 0.5);
+    }
+
+    #diesel-text {
+      position: absolute;
+      width: 100%;
+      text-align: center;
+      bottom: 10px;
+      font-weight: bold;
+      color: #000;
+      font-size: 20px;
+      text-shadow: 1px 1px 2px rgba(255,255,255,0.9);
+    }
+
+    .history-box {
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 10px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .clear-btn {
+      margin: 5px 0;
+      padding: 5px 10px;
+      background: #ff6666;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .clear-btn:hover {
+      background: #e60000;
+    }
   </style>
 </head>
 <body>
-<h2>Estado de Alarmas (desde ESP32 vía EMQX)</h2>
+  <h2>Estado de Alarmas (desde ESP32 vía EMQX)</h2>
 
-<div class="tabs">
-  <div class="tab active" onclick="showTab(0)">Alarmas Externas OTY</div>
-  <div class="tab" onclick="showTab(1)">Alarmas Externas ITR</div>
-</div>
+  <div class="tabs">
+    <div class="tab active" onclick="showTab(0)">Alarmas Externas OTY</div>
+    <div class="tab" onclick="showTab(1)">Alarmas Externas ITR</div>
+  </div>
 
-<!-- TAB 0 -->
-<div id="tab-0" class="tab-content active">
-  <div class="byte-info" id="byte-external-OTY">Esperando datos de OTY...</div>
-  <div class="alarms-house-layout">
-    <div class="alarms-container" id="alarms-external-OTY"></div>
-    <div class="house-area">
-      <div class="house-drawing">
-        <div class="roof"></div>
-        <div class="walls"></div>
-        <div class="door"></div>
-        <div class="window"></div>
-
-        <!-- ICONOS -->
-        <img id="gen" class="icon" src="icons/generador.svg" style="bottom: -220px; left: 100px;">
-        <img id="trafo" class="icon" src="icons/transformador.svg" style="bottom: -220px; right: 0;">
-        <img id="switch" class="icon" src="icons/interruptor.svg" style="bottom: 50px; left: 420px;">
-        <img id="battery" class="icon" src="icons/bateria.svg" style="bottom: 50px; left: 30px;">
-        <img id="rectifier" class="icon" src="icons/rectificador.svg" style="bottom: 100px; left: 420px;">
-        <img id="ground" class="icon" src="icons/barra_tierra.svg" style="top: 0; right: 0;">
-        <img id="transfer" class="icon" src="icons/transfer.svg" style="bottom: -200px; left: 200px;">
-        <img id="thermo" class="icon" src="icons/termometro.svg" style="top: -40px; left: 240px;">
-        <img id="person" class="icon" src="icons/persona.svg" style="bottom: 200px; left: 30px;">
-        <img id="arrow" class="icon" src="icons/flecha.svg" style="bottom: -180px; left: 250px;">
+  <!-- TAB 0: OTY -->
+  <div id="tab-0" class="tab-content active">
+    <div class="byte-info" id="byte-external-OTY">Esperando datos de OTY...</div>
+    <div class="alarms-house-layout">
+      <div class="alarms-container" id="alarms-external-OTY"></div>
+      <div class="house-area">
+        <div class="house-drawing">
+          <div class="roof"></div>
+          <div class="walls"></div>
+          <div class="door"></div>
+          <div class="window"></div>
+          </div>
+         </div>
+        </div>
       </div>
     </div>
   </div>
 
-  <h3>📜 Historial de Alarmas OTY</h3>
-  <button class="clear-btn" onclick="clearHistory('OTY')">🧹 Limpiar Historial OTY</button>
-  <ul id="history-OTY" class="history-box"></ul>
-</div>
-
-<!-- TAB 1 -->
-<div id="tab-1" class="tab-content">
-  <div class="byte-info" id="byte-external-ITR">Esperando datos de ITR...</div>
-  <div class="alarms-house-layout">
-    <div class="alarms-container" id="alarms-external-ITR"></div>
-    <div class="house-area">
-      <div class="house-drawing">
-        <div class="roof"></div>
-        <div class="walls"></div>
-        <div class="door"></div>
-        <div class="window"></div>
-
-        <!-- ICONOS REPETIDOS PARA ITR -->
-        <img id="gen_ITR" class="icon" src="icons/generador.svg" style="bottom: -220px; left: 100px;">
-        <img id="trafo_ITR" class="icon" src="icons/transformador.svg" style="bottom: -220px; right: 0;">
-        <img id="switch_ITR" class="icon" src="icons/interruptor.svg" style="bottom: 50px; left: 420px;">
-        <img id="battery_ITR" class="icon" src="icons/bateria.svg" style="bottom: 50px; left: 30px;">
-        <img id="rectifier_ITR" class="icon" src="icons/rectificador.svg" style="bottom: 100px; left: 420px;">
-        <img id="ground_ITR" class="icon" src="icons/barra_tierra.svg" style="top: 0; right: 0;">
-        <img id="transfer_ITR" class="icon" src="icons/transfer.svg" style="bottom: -200px; left: 200px;">
-        <img id="thermo_ITR" class="icon" src="icons/termometro.svg" style="top: -40px; left: 240px;">
-        <img id="person_ITR" class="icon" src="icons/persona.svg" style="bottom: 200px; left: 30px;">
-        <img id="arrow_ITR" class="icon" src="icons/flecha.svg" style="bottom: -180px; left: 250px;">
+  <!-- TAB 1: ITR -->
+  <div id="tab-1" class="tab-content">
+    <div class="byte-info" id="byte-external-ITR">Esperando datos de ITR...</div>
+    <div class="alarms-house-layout">
+      <div class="alarms-container" id="alarms-external-ITR"></div>
+      <div class="house-area">
+        <div class="house-drawing">
+          <div class="roof"></div>
+          <div class="walls"></div>
+          <div class="door"></div>
+          <div class="window"></div>
+          <div class="tank-container">
+          <div id="diesel-tank">
+          <div id="diesel-fill"></div>
+          <div id="diesel-text">0%</div>
+        </div>
       </div>
     </div>
   </div>
 
-  <h3>📜 Historial de Alarmas ITR</h3>
-  <button class="clear-btn" onclick="clearHistory('ITR')">🧹 Limpiar Historial ITR</button>
-  <ul id="history-ITR" class="history-box"></ul>
-</div>
+  <script>
+    // MQTT conexión WebSocket
+    const client = mqtt.connect('wss://d4e6f442.ala.us-east-1.emqxsl.com:8084/mqtt', {
+      clientId: 'web_' + Math.random().toString(16).substr(2, 8),
+      username: 'Olivas',
+      password: 'Jangel27'
+    });
 
-<script>
-const client = mqtt.connect('wss://d4fjhjgfhjghuigfuhfusifh8084/mqtt', {
-  clientId: 'web_' + Math.random().toString(16).substr(2,8),
-  username: 'hhhhhhhh', password: 'vvvvvvvvv'
-});
+    const alarmNamesExternalOTY = [
+      "FALLA*ALIM*COM*OTY","GPO*ELEC*OPER*OTY","FALLA*FUS*DIST*A*OTY","FALLA*RECT*A*OTY",
+      "ALTA*TEMP*CX*OTY","FALLA*FUS*VOLTA*A*OTY","BAT*EN*OPER*A*OTY","BAJO*VOLTAJE*A*OTY",
+      "ALARMA LIBRE 1","ALARMA LIBRE 2","ALARMA LIBRE 3","ALARMA LIBRE 4",
+      "ALARMA LIBRE 5","ALARMA LIBRE 6","ALARMA LIBRE 7","ALARMA LIBRE 8"
+    ];
 
-const alarmNamesExternalOTY = [
-  "FALLA*ALIM*COM*OTY","GPO*ELEC*OPER*OTY","FALLA*FUS*DIST*A*OTY","FALLA*RECT*A*OTY",
-  "ALTA*TEMP*CX*OTY","FALLA*FUS*VOLTA*A*OTY","BAT*EN*OPER*A*OTY","BAJO*VOLTAJE*A*OTY",
-  "ALARMA LIBRE 1","ALARMA LIBRE 2","ALARMA LIBRE 3","ALARMA LIBRE 4",
-  "ALARMA LIBRE 5","ALARMA LIBRE 6","ALARMA LIBRE 7","ALARMA LIBRE 8"
-];
-const alarmNamesExternalITR = alarmNamesExternalOTY.map(a => a.replace("OTY","ITR"));
+    const alarmNamesExternalITR = [
+      "FALLA*ALIM*COM*ITR","GPO*ELEC*OPER*ITR","FALLA*FUS*DIST*A*ITR","FALLA*RECT*A*ITR",
+      "ALTA*TEMP*CX*ITR","FALLA*FUS*VOLTA*A*ITR","BAT*EN*OPER*A*ITR","BAJO*VOLTAJE*A*ITR",
+      "ALARMA LIBRE 1","ALARMA LIBRE 2","ALARMA LIBRE 3","ALARMA LIBRE 4",
+      "ALARMA LIBRE 5","ALARMA LIBRE 6","ALARMA LIBRE 7","ALARMA LIBRE 8"
+    ];
 
-let previousAlarmStates = { 'alarms-external-OTY': null, 'alarms-external-ITR': null };
-const alarmHistory = JSON.parse(localStorage.getItem('alarmHistory')||'{}');
-if(!alarmHistory['OTY']) alarmHistory['OTY']=[]; 
-if(!alarmHistory['ITR']) alarmHistory['ITR']=[];
+    client.on('connect', () => {
+      console.log('? Conectado a EMQX');
+      client.subscribe('esp32/External_Alarms_OTY');
+      client.subscribe('esp32/External_Alarms_ITR');
+      client.subscribe('esp32/NivelDiesel_ITR');
+    });
 
-function showTab(index){
-  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',i===index));
-  document.querySelectorAll('.tab-content').forEach((c,i)=>c.classList.toggle('active',i===index));
+    client.on('message', (topic, message) => {
+      if (topic === 'esp32/External_Alarms_OTY' || topic === 'esp32/External_Alarms_ITR') {
+        const highByte = message[0];
+        const lowByte = message[1];
+        const value = (highByte << 8) | lowByte;
+        const binStr = value.toString(2).padStart(16, '0');
+
+        if (topic === 'esp32/External_Alarms_OTY') {
+          document.getElementById('byte-external-OTY').textContent =
+            `Bytes recibidos (OTY): ${highByte}, ${lowByte} | bin: ${binStr}`;
+          updateAlarms('alarms-external-OTY', value, alarmNamesExternalOTY);
+        } else {
+          document.getElementById('byte-external-ITR').textContent =
+            `Bytes recibidos (ITR): ${highByte}, ${lowByte} | bin: ${binStr}`;
+          updateAlarms('alarms-external-ITR', value, alarmNamesExternalITR);
+        }
+      } else if (topic === 'esp32/NivelDiesel_ITR') {
+        const porcentaje = parseInt(message.toString());
+        updateDieselLevel(porcentaje);
+      }
+    });
+
+    function toggleAlarmTab(tabIndex, isActive) {
+      const tabs = document.querySelectorAll('.tab');
+      if (!tabs[tabIndex]) return;
+      tabs[tabIndex].classList.toggle('alarm-active-tab', isActive);
+    }
+
+    function showTab(index) {
+      const tabs = document.querySelectorAll('.tab');
+      const contents = document.querySelectorAll('.tab-content');
+      tabs.forEach((tab, i) => {
+        tab.classList.toggle('active', i === index);
+        contents[i].classList.toggle('active', i === index);
+      });
+    }
+
+    function updateDieselLevel(porcentaje) {
+      const fill = document.getElementById('diesel-fill');
+      const text = document.getElementById('diesel-text');
+      const nivel = Math.max(0, Math.min(100, porcentaje));
+      fill.style.height = `${nivel}%`;
+
+      if (nivel < 20) {
+        fill.style.background = 'linear-gradient(to top, #800000, #ff0000)';
+      } else if (nivel < 50) {
+        fill.style.background = 'linear-gradient(to top, #e6b800, #ffff00)';
+      } else {
+        fill.style.background = 'linear-gradient(to top, #007b00, #00ff00)';
+      }
+
+      text.textContent = `${nivel}%`;
+    }
+
+// === HISTORIAL POR PESTAÑA ===
+const alarmHistory = JSON.parse(localStorage.getItem('alarmHistory') || '{}');
+if (!alarmHistory['OTY']) alarmHistory['OTY'] = [];
+if (!alarmHistory['ITR']) alarmHistory['ITR'] = [];
+
+function createHistoryContainers() {
+  const otyTab = document.getElementById('tab-0');
+  const itrTab = document.getElementById('tab-1');
+
+  const otyHistoryDiv = document.createElement('div');
+  otyHistoryDiv.innerHTML = `
+    <h3>📜 Historial de Alarmas OTY</h3>
+    <button class="clear-btn" onclick="clearHistory('OTY')">🧹 Limpiar Historial OTY</button>
+    <ul id="history-OTY" class="history-box"></ul>
+  `;
+  otyTab.appendChild(otyHistoryDiv);
+
+  const itrHistoryDiv = document.createElement('div');
+  itrHistoryDiv.innerHTML = `
+    <h3>📜 Historial de Alarmas ITR</h3>
+    <button class="clear-btn" onclick="clearHistory('ITR')">🧹 Limpiar Historial ITR</button>
+    <ul id="history-ITR" class="history-box"></ul>
+  `;
+  itrTab.appendChild(itrHistoryDiv);
 }
 
-function clearHistory(site){
-  if(confirm(`¿Seguro que quieres borrar el historial de ${site}?`)){
-    alarmHistory[site]=[];
-    localStorage.setItem('alarmHistory',JSON.stringify(alarmHistory));
-    renderHistory(site);
-  }
-}
+createHistoryContainers();
 
-function renderHistory(site){
+function renderHistory(site) {
   const list = document.getElementById(`history-${site}`);
-  list.innerHTML='';
-  alarmHistory[site].forEach(e=>addHistoryEntry(site,e));
+  list.innerHTML = '';
+  alarmHistory[site].forEach(entry => addHistoryEntry(site, entry));
 }
 
-function addHistoryEntry(site,entry){
+function addHistoryEntry(site, entry) {
   const list = document.getElementById(`history-${site}`);
   const li = document.createElement('li');
   li.textContent = `[${entry.time}] ${entry.name} → ${entry.state}`;
   list.prepend(li);
 }
 
-function logAlarmChange(site,name,state){
+function logAlarmChange(site, name, state) {
+  // Solo registrar si hay un cambio de estado real (0→1 o 1→0)
   const timestamp = new Date().toLocaleString();
-  const entry={time:timestamp,name,state};
+  const entry = { time: timestamp, name, state };
   alarmHistory[site].push(entry);
-  localStorage.setItem('alarmHistory',JSON.stringify(alarmHistory));
-  addHistoryEntry(site,entry);
+  localStorage.setItem('alarmHistory', JSON.stringify(alarmHistory));
+  addHistoryEntry(site, entry);
 }
 
-function toggleAlarmTab(tabIndex,isActive){
-  const tabs = document.querySelectorAll('.tab');
-  if(!tabs[tabIndex]) return;
-  tabs[tabIndex].classList.toggle('alarm-active-tab',isActive);
+function clearHistory(site) {
+  if (confirm(`¿Seguro que quieres borrar el historial de ${site}?`)) {
+    alarmHistory[site] = [];
+    localStorage.setItem('alarmHistory', JSON.stringify(alarmHistory));
+    renderHistory(site);
+  }
 }
 
-function updateIcon(id,active){
-  const el=document.getElementById(id);
-  if(el) el.classList.toggle('red',active);
-}
+renderHistory('OTY');
+renderHistory('ITR');
 
-function updateAlarms(containerId,value16bit,alarmNames,pref=''){
+// === Detectar cambios de estado ===
+let previousAlarmStates = {
+  'alarms-external-OTY': null,
+  'alarms-external-ITR': null
+};
+
+function updateAlarms(containerId, value16bit, alarmNames) {
   const container = document.getElementById(containerId);
   const prev = previousAlarmStates[containerId];
   const current = [];
-  let hasActiveAlarm=false;
-  container.innerHTML='';
+  let hasActiveAlarm = false;
 
-  for(let i=0;i<16;i++){
-    const bit=(value16bit>>i)&1;
-    current[i]=bit;
-    if(bit) hasActiveAlarm=true;
-    if(prev && prev[i]!==bit){
-      const name=alarmNames[i];
-      const site=containerId.includes('OTY')?'OTY':'ITR';
-      const state = bit?'🚨 ACTIVADA':'✅ CESÓ';
-      logAlarmChange(site,name,state);
+  container.innerHTML = '';
+
+  // Recorremos de bit 0 a 15 (orden consistente)
+  for (let i = 0; i < 16; i++) {
+    const bit = (value16bit >> i) & 1;
+    current[i] = bit;
+    if (bit) hasActiveAlarm = true;
+
+    // Solo registrar si ya hubo lectura previa y hay cambio
+    if (prev && prev[i] !== bit) {
+      const name = alarmNames[i];
+      const site = containerId.includes('OTY') ? 'OTY' : 'ITR';
+      const state = bit ? '🚨 ACTIVADA' : '✅ CESÓ';
+      logAlarmChange(site, name, state);
     }
-    const div=document.createElement('div');
-    div.className='alarm '+(bit?'active':'inactive');
-    div.textContent=`A${i} - ${alarmNames[i]}: ${bit?'🚨 Alarma activa':'✅ Sin alarma'}`;
+
+    const div = document.createElement('div');
+    div.className = 'alarm ' + (bit ? 'active' : 'inactive');
+    div.textContent = `A${i} - ${alarmNames[i]}: ${bit ? '🚨 Alarma activa' : '✅ Sin alarma'}`;
     container.appendChild(div);
-
-    // ===== Cambiar color iconos =====
-    const iconMap = {
-      "GPO*ELEC*OPER*OTY":"gen", "GPO*ELEC*OPER*ITR":"gen_ITR",
-      "FALLA*ALIM*COM*OTY":"trafo","FALLA*ALIM*COM*ITR":"trafo_ITR",
-      "FALLA*FUS*VOLTA*A*OTY":"switch","FALLA*FUS*VOLTA*A*ITR":"switch_ITR",
-      "FALLA*RECT*A*OTY":"rectifier","FALLA*RECT*A*ITR":"rectifier_ITR",
-      "ALTA*TEMP*CX*OTY":"thermo","ALTA*TEMP*CX*ITR":"thermo_ITR",
-      "ALARMA LIBRE 1":"ground","ALARMA LIBRE 2":"person",
-    };
-    const batteryAlarms = ["FALLA*FUS*VOLTA*A*OTY","BAT*EN*OPER*A*OTY","BAJO*VOLTAJE*A*OTY",
-                            "FALLA*FUS*VOLTA*A*ITR","BAT*EN*OPER*ITR","BAJO*VOLTAJE*ITR"];
-    if(alarmMapId=iconMap[alarmNames[i]]) updateIcon(iconMap[alarmNames[i]],bit);
-    if(batteryAlarms.includes(alarmNames[i])) updateIcon(pref+'battery',bit);
   }
-  previousAlarmStates[containerId]=current;
-  if(containerId==='alarms-external-OTY') toggleAlarmTab(0,hasActiveAlarm);
-  if(containerId==='alarms-external-ITR') toggleAlarmTab(1,hasActiveAlarm);
+
+  previousAlarmStates[containerId] = current;
+
+  if (containerId === 'alarms-external-OTY') toggleAlarmTab(0, hasActiveAlarm);
+  if (containerId === 'alarms-external-ITR') toggleAlarmTab(1, hasActiveAlarm);
 }
-
-client.on('connect',()=>{
-  console.log('Conectado a EMQX');
-  client.subscribe('esp32/External_Alarms_OTY');
-  client.subscribe('esp32/External_Alarms_ITR');
-});
-
-client.on('message',(topic,message)=>{
-  if(topic==='esp32/External_Alarms_OTY'||topic==='esp32/External_Alarms_ITR'){
-    const highByte=message[0], lowByte=message[1];
-    const value=(highByte<<8)|lowByte;
-    const binStr=value.toString(2).padStart(16,'0');
-    if(topic==='esp32/External_Alarms_OTY'){
-      document.getElementById('byte-external-OTY').textContent=`Bytes recibidos (OTY): ${highByte}, ${lowByte} | bin: ${binStr}`;
-      updateAlarms('alarms-external-OTY',value,alarmNamesExternalOTY,'');
-    } else {
-      document.getElementById('byte-external-ITR').textContent=`Bytes recibidos (ITR): ${highByte}, ${lowByte} | bin: ${binStr}`;
-      updateAlarms('alarms-external-ITR',value,alarmNamesExternalITR,'ITR_');
-    }
-  }
-});
-
-// Renderizar historial inicial
-renderHistory('OTY'); renderHistory('ITR');
-</script>
+  </script>
 </body>
 </html>
