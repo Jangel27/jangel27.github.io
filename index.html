@@ -5,40 +5,238 @@
   <title>Monitor de Alarmas ESP32</title>
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; }
-    .tabs { display: flex; cursor: pointer; margin-bottom: 10px; }
-    .tab { padding: 10px 20px; border: 1px solid #ccc; border-bottom: none; background-color: #f1f1f1; }
-    .tab.active { background-color: white; font-weight: bold; }
-    .tab.alarm-active-tab { background-color: red !important; color: white; }
-    .tab-content { display: none; border: 1px solid #ccc; padding: 10px; background-color: #d8d8d8; }
-    .tab-content.active { display: block; }
-    .alarms-house-layout { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
-    .alarms-container { flex: 1; }
-    .alarm { border: 1px solid #ccc; border-radius: 5px; padding: 10px; margin: 10px 0; font-size: 12px; width: 270px; }
-    .active { background-color: #ffe5e5; color: #b30000; font-weight: bold; }
-    .inactive { background-color: #e5ffe5; color: #007000; }
-    .byte-info { font-size: 16px; font-weight: bold; }
-    .house-area { display: flex; flex-direction: column; align-items: center; margin-top: 40px; position: relative; }
-    .house-drawing { position: relative; width: 540px; height: 620px; }
-    .roof { position: absolute; top: -60px; left: 0; width: 0; height: 0; border-left: 270px solid transparent; border-right: 270px solid transparent; border-bottom: 200px solid transparent; }
-    .roof::before, .roof::after { content: ""; position: absolute; top: 0; width: 2px; height: 320px; background-color: #000; }
-    .roof::before { left: -270px; transform: rotate(57deg); transform-origin: bottom right; }
-    .roof::after { right: -270px; transform: rotate(-57deg); transform-origin: bottom left; }
-    .roof .base-line { position: absolute; bottom: 0; left: -270px; width: 540px; height: 2px; background-color: #000; }
-    .walls { position: absolute; bottom: 0; width: 540px; height: 360px; background-color: transparent; border: 2px solid #000; box-sizing: border-box; }
-    .door { position: absolute; bottom: 0; left: 0; width: 150px; height: 220px; background-color: transparent; border: 2px solid #000; box-sizing: border-box; }
-    .window { position: absolute; bottom: 0; left: 390px; width: 150px; height: 220px; background-color: transparent; border: 2px solid #000; box-sizing: border-box; }
-    #diesel-tank { position: absolute; bottom: -220px; left: -60px; width: 150px; height: 75px; border: 4px solid #555; border-radius: 60px; background: radial-gradient(circle at 50% 30%, #fff176 0%, #FAD201 60%, #c9a801 100%); box-shadow: inset -6px 0 10px rgba(0, 0, 0, 0.3), inset 6px 0 10px rgba(255, 255, 255, 0.5); overflow: hidden; }
-    #diesel-fill { position: absolute; bottom: 0; left: 0; width: 100%; height: 0%; background: linear-gradient(to top, #007b00, #00ff00); border-radius: 0 0 40px 40px; transition: height 0.8s ease, background 0.6s ease; box-shadow: inset 0 2px 5px rgba(255, 255, 255, 0.5); }
-    #diesel-text { position: absolute; width: 100%; text-align: center; bottom: 10px; font-weight: bold; color: #000; font-size: 20px; text-shadow: 1px 1px 2px rgba(255,255,255,0.9); }
-    .history-box { background: #fff; border: 1px solid #ccc; padding: 10px; max-height: 200px; overflow-y: auto; }
-    .clear-btn { margin: 5px 0; padding: 5px 10px; background: #ff6666; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
-    .clear-btn:hover { background: #e60000; }
-    .figura-alarma { position: absolute; transition: all 0.3s ease; }
+    body {
+      font-family: Arial, sans-serif;
+    }
+
+    .tabs {
+      display: flex;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+
+    .tab {
+      padding: 10px 20px;
+      border: 1px solid #ccc;
+      border-bottom: none;
+      background-color: #f1f1f1;
+    }
+
+    .tab.active {
+      background-color: white;
+      font-weight: bold;
+    }
+
+    .tab.alarm-active-tab {
+      background-color: red !important;
+      color: white;
+    }
+
+    .tab-content {
+      display: none;
+      border: 1px solid #ccc;
+      padding: 10px;
+      background-color: #d8d8d8;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .alarms-house-layout {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 20px;
+    }
+
+    .alarms-container {
+      flex: 1;
+    }
+
+    .alarm {
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 12px;
+      width: 270px;
+    }
+
+    .active {
+      background-color: #ffe5e5;
+      color: #b30000;
+      font-weight: bold;
+    }
+
+    .inactive {
+      background-color: #e5ffe5;
+      color: #007000;
+    }
+
+    .byte-info {
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    /* ====== Área de la casa ====== */
+    .house-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 40px;
+    }
+
+    .house-drawing {
+      position: relative;
+      width: 540px;
+      height: 620px;
+      top: -70px;
+      left: -50px;
+    }
+
+    .roof {
+      position: absolute;
+      top: -60px;
+      left: 0;
+      width: 0;
+      height: 0;
+      border-left: 270px solid transparent;
+      border-right: 270px solid transparent;
+      border-bottom: 200px solid transparent;
+    }
+
+    .roof::before,
+    .roof::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      width: 2px;
+      height: 320px;
+      background-color: #000;
+    }
+
+    .roof::before {
+      left: -270px;
+      transform: rotate(57deg);
+      transform-origin: bottom right;
+    }
+
+    .roof::after {
+      right: -270px;
+      transform: rotate(-57deg);
+      transform-origin: bottom left;
+    }
+
+    .roof .base-line {
+      position: absolute;
+      bottom: 0;
+      left: -270px;
+      width: 540px;
+      height: 2px;
+      background-color: #000;
+    }
+
+    .walls {
+      position: absolute;
+      bottom: 0;
+      width: 540px;
+      height: 360px;
+      background-color: transparent;
+      border: 2px solid #000000;
+      box-sizing: border-box;
+    }
+
+    .door {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 150px;
+      height: 220px;
+      background-color: transparent;
+      border: 2px solid #000000;
+      box-sizing: border-box;
+    }
+
+    .window {
+      position: absolute;
+      bottom: 0;
+      left: 390px;
+      width: 150px;
+      height: 220px;
+      background-color: transparent;
+      border: 2px solid #000000;
+      box-sizing: border-box;
+    }
+
+    .tank-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #diesel-tank {
+      position: absolute;
+      bottom: -220px;
+      left: -60px;
+      width: 150px;
+      height: 75px;
+      border: 4px solid #555;
+      border-radius: 60px;
+      background: radial-gradient(circle at 50% 30%, #fff176 0%, #FAD201 60%, #c9a801 100%);
+      box-shadow: inset -6px 0 10px rgba(0, 0, 0, 0.3),
+                  inset 6px 0 10px rgba(255, 255, 255, 0.5);
+      overflow: hidden;
+    }
+
+    #diesel-fill {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 0%;
+      background: linear-gradient(to top, #007b00, #00ff00);
+      border-radius: 0 0 40px 40px;
+      transition: height 0.8s ease, background 0.6s ease;
+      box-shadow: inset 0 2px 5px rgba(255, 255, 255, 0.5);
+    }
+
+    #diesel-text {
+      position: absolute;
+      width: 100%;
+      text-align: center;
+      bottom: 10px;
+      font-weight: bold;
+      color: #000;
+      font-size: 20px;
+      text-shadow: 1px 1px 2px rgba(255,255,255,0.9);
+    }
+
+    .history-box {
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 10px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .clear-btn {
+      margin: 5px 0;
+      padding: 5px 10px;
+      background: #ff6666;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .clear-btn:hover {
+      background: #e60000;
+    }
   </style>
 </head>
 <body>
   <h2>Estado de Alarmas (desde ESP32 vía EMQX)</h2>
+
   <div class="tabs">
     <div class="tab active" onclick="showTab(0)">Alarmas Externas OTY</div>
     <div class="tab" onclick="showTab(1)">Alarmas Externas ITR</div>
@@ -55,10 +253,8 @@
           <div class="walls"></div>
           <div class="door"></div>
           <div class="window"></div>
-          <div id="diesel-tank">
-            <div id="diesel-fill"></div>
-            <div id="diesel-text">0%</div>
           </div>
+         </div>
         </div>
       </div>
     </div>
@@ -75,10 +271,10 @@
           <div class="walls"></div>
           <div class="door"></div>
           <div class="window"></div>
+          <div class="tank-container">
           <div id="diesel-tank">
-            <div id="diesel-fill"></div>
-            <div id="diesel-text">0%</div>
-          </div>
+          <div id="diesel-fill"></div>
+          <div id="diesel-text">0%</div>
         </div>
       </div>
     </div>
@@ -95,17 +291,19 @@
     const alarmNamesExternalOTY = [
       "FALLA*ALIM*COM*OTY","GPO*ELEC*OPER*OTY","FALLA*FUS*DIST*A*OTY","FALLA*RECT*A*OTY",
       "ALTA*TEMP*CX*OTY","FALLA*FUS*VOLTA*A*OTY","BAT*EN*OPER*A*OTY","BAJO*VOLTAJE*A*OTY",
-      "ALARMA LIBRE 1","ALARMA LIBRE 2"
+      "ALARMA LIBRE 1","ALARMA LIBRE 2","ALARMA LIBRE 3","ALARMA LIBRE 4",
+      "ALARMA LIBRE 5","ALARMA LIBRE 6","ALARMA LIBRE 7","ALARMA LIBRE 8"
     ];
 
     const alarmNamesExternalITR = [
       "FALLA*ALIM*COM*ITR","GPO*ELEC*OPER*ITR","FALLA*FUS*DIST*A*ITR","FALLA*RECT*A*ITR",
       "ALTA*TEMP*CX*ITR","FALLA*FUS*VOLTA*A*ITR","BAT*EN*OPER*A*ITR","BAJO*VOLTAJE*A*ITR",
-      "ALARMA LIBRE 1","ALARMA LIBRE 2"
+      "ALARMA LIBRE 1","ALARMA LIBRE 2","ALARMA LIBRE 3","ALARMA LIBRE 4",
+      "ALARMA LIBRE 5","ALARMA LIBRE 6","ALARMA LIBRE 7","ALARMA LIBRE 8"
     ];
 
     client.on('connect', () => {
-      console.log('Conectado a EMQX');
+      console.log('? Conectado a EMQX');
       client.subscribe('esp32/External_Alarms_OTY');
       client.subscribe('esp32/External_Alarms_ITR');
       client.subscribe('esp32/NivelDiesel_ITR');
@@ -149,117 +347,122 @@
     }
 
     function updateDieselLevel(porcentaje) {
-      const fill = document.querySelectorAll('#diesel-fill');
-      const text = document.querySelectorAll('#diesel-text');
+      const fill = document.getElementById('diesel-fill');
+      const text = document.getElementById('diesel-text');
       const nivel = Math.max(0, Math.min(100, porcentaje));
-      fill.forEach(f => {
-        f.style.height = `${nivel}%`;
-        if (nivel < 20) f.style.background = 'linear-gradient(to top, #800000, #ff0000)';
-        else if (nivel < 50) f.style.background = 'linear-gradient(to top, #e6b800, #ffff00)';
-        else f.style.background = 'linear-gradient(to top, #007b00, #00ff00)';
-      });
-      text.forEach(t => t.textContent = `${nivel}%`);
-    }
+      fill.style.height = `${nivel}%`;
 
-    // === Historial ===
-    const alarmHistory = JSON.parse(localStorage.getItem('alarmHistory') || '{}');
-    if (!alarmHistory['OTY']) alarmHistory['OTY'] = [];
-    if (!alarmHistory['ITR']) alarmHistory['ITR'] = [];
-
-    function createHistoryContainers() {
-      ['tab-0','tab-1'].forEach((tabId, idx) => {
-        const tab = document.getElementById(tabId);
-        const site = idx === 0 ? 'OTY' : 'ITR';
-        const div = document.createElement('div');
-        div.innerHTML = `<h3>Historial de Alarmas ${site}</h3>
-        <button class="clear-btn" onclick="clearHistory('${site}')">Limpiar Historial ${site}</button>
-        <ul id="history-${site}" class="history-box"></ul>`;
-        tab.appendChild(div);
-      });
-    }
-    createHistoryContainers();
-
-    function renderHistory(site) {
-      const list = document.getElementById(`history-${site}`);
-      list.innerHTML = '';
-      alarmHistory[site].forEach(entry => addHistoryEntry(site, entry));
-    }
-
-    function addHistoryEntry(site, entry) {
-      const list = document.getElementById(`history-${site}`);
-      const li = document.createElement('li');
-      li.textContent = `[${entry.time}] ${entry.name} ${entry.state}`;
-      list.prepend(li);
-    }
-
-    function logAlarmChange(site, name, state) {
-      const timestamp = new Date().toLocaleString();
-      const entry = { time: timestamp, name, state };
-      alarmHistory[site].push(entry);
-      localStorage.setItem('alarmHistory', JSON.stringify(alarmHistory));
-      addHistoryEntry(site, entry);
-    }
-
-    function clearHistory(site) {
-      if(confirm(`¿Seguro que quieres borrar el historial de ${site}?`)){
-        alarmHistory[site] = [];
-        localStorage.setItem('alarmHistory', JSON.stringify(alarmHistory));
-        renderHistory(site);
+      if (nivel < 20) {
+        fill.style.background = 'linear-gradient(to top, #800000, #ff0000)';
+      } else if (nivel < 50) {
+        fill.style.background = 'linear-gradient(to top, #e6b800, #ffff00)';
+      } else {
+        fill.style.background = 'linear-gradient(to top, #007b00, #00ff00)';
       }
+
+      text.textContent = `${nivel}%`;
     }
 
-    renderHistory('OTY');
-    renderHistory('ITR');
+// === HISTORIAL POR PESTAÑA ===
+const alarmHistory = JSON.parse(localStorage.getItem('alarmHistory') || '{}');
+if (!alarmHistory['OTY']) alarmHistory['OTY'] = [];
+if (!alarmHistory['ITR']) alarmHistory['ITR'] = [];
 
-    // === Figuras SVG ===
-    const figurasSVG = {
-      'poste': `<rect width="20" height="60" stroke="black" fill="transparent"/>`,
-      'generador': `<circle cx="25" cy="25" r="25" stroke="black" fill="transparent"/>`,
-      'circuit-breaker': `<rect width="50" height="30" stroke="black" fill="transparent"/>`,
-      'rectificador-simbolo': `<polygon points="0,30 25,0 50,30" stroke="black" fill="transparent"/>`,
-      'termometro': `<rect x="20" y="0" width="10" height="50" stroke="black" fill="transparent"/><circle cx="25" cy="55" r="10" stroke="black" fill="transparent"/>`,
-      'bateria': `<rect width="40" height="20" stroke="black" fill="transparent"/><rect x="40" y="5" width="5" height="10" fill="transparent" stroke="black"/>`,
-      'persona': `<circle cx="15" cy="10" r="10" stroke="black" fill="transparent"/><rect x="10" y="20" width="10" height="20" stroke="black" fill="transparent"/>`,
-      'barra-tierra': `<rect width="50" height="10" stroke="black" fill="transparent"/>`
-    };
+function createHistoryContainers() {
+  const otyTab = document.getElementById('tab-0');
+  const itrTab = document.getElementById('tab-1');
 
-    const figuraMapaOTY = [
-      { bit: 0, figuraId: 'poste', left: '20px', top: '300px' },
-      { bit: 1, figuraId: 'generador', left: '100px', top: '300px' },
-      { bit: 2, figuraId: 'circuit-breaker', left: '200px', top: '200px' },
-      { bit: 3, figuraId: 'rectificador-simbolo', left: '300px', top: '200px' },
-      { bit: 4, figuraId: 'termometro', left: '400px', top: '150px' },
-      { bit: 5, figuraId: 'bateria', left: '150px', top: '150px' },
-      { bit: 6, figuraId: 'bateria', left: '200px', top: '150px' },
-      { bit: 7, figuraId: 'bateria', left: '250px', top: '150px' },
-      { bit: 8, figuraId: 'persona', left: '350px', top: '250px' },
-      { bit: 9, figuraId: 'barra-tierra', left: '450px', top: '300px' }
-    ];
-    const figuraMapaITR = figuraMapaOTY.map(f => ({ ...f }));
+  const otyHistoryDiv = document.createElement('div');
+  otyHistoryDiv.innerHTML = `
+    <h3>📜 Historial de Alarmas OTY</h3>
+    <button class="clear-btn" onclick="clearHistory('OTY')">🧹 Limpiar Historial OTY</button>
+    <ul id="history-OTY" class="history-box"></ul>
+  `;
+  otyTab.appendChild(otyHistoryDiv);
 
-    function insertarFiguras(tabContentId, mapa){
-      const houseDiv = document.querySelector(`#${tabContentId} .house-drawing`);
-      if(!houseDiv) return;
-      const svgNS = "http://www.w3.org/2000/svg";
-      mapa.forEach(f => {
-        const existing = document.getElementById(`${tabContentId}-${f.figuraId}`);
-        if(!existing){
-          const figuraEl = document.createElementNS(svgNS,"svg");
-          figuraEl.setAttribute('id',`${tabContentId}-${f.figuraId}`);
-          figuraEl.setAttribute('class','figura-alarma');
-          figuraEl.setAttribute('width','50');
-          figuraEl.setAttribute('height','50');
-          figuraEl.style.left = f.left;
-          figuraEl.style.top = f.top;
-          figuraEl.innerHTML = figurasSVG[f.figuraId];
-          houseDiv.appendChild(figuraEl);
-        }
-      });
+  const itrHistoryDiv = document.createElement('div');
+  itrHistoryDiv.innerHTML = `
+    <h3>📜 Historial de Alarmas ITR</h3>
+    <button class="clear-btn" onclick="clearHistory('ITR')">🧹 Limpiar Historial ITR</button>
+    <ul id="history-ITR" class="history-box"></ul>
+  `;
+  itrTab.appendChild(itrHistoryDiv);
+}
+
+createHistoryContainers();
+
+function renderHistory(site) {
+  const list = document.getElementById(`history-${site}`);
+  list.innerHTML = '';
+  alarmHistory[site].forEach(entry => addHistoryEntry(site, entry));
+}
+
+function addHistoryEntry(site, entry) {
+  const list = document.getElementById(`history-${site}`);
+  const li = document.createElement('li');
+  li.textContent = `[${entry.time}] ${entry.name} → ${entry.state}`;
+  list.prepend(li);
+}
+
+function logAlarmChange(site, name, state) {
+  // Solo registrar si hay un cambio de estado real (0→1 o 1→0)
+  const timestamp = new Date().toLocaleString();
+  const entry = { time: timestamp, name, state };
+  alarmHistory[site].push(entry);
+  localStorage.setItem('alarmHistory', JSON.stringify(alarmHistory));
+  addHistoryEntry(site, entry);
+}
+
+function clearHistory(site) {
+  if (confirm(`¿Seguro que quieres borrar el historial de ${site}?`)) {
+    alarmHistory[site] = [];
+    localStorage.setItem('alarmHistory', JSON.stringify(alarmHistory));
+    renderHistory(site);
+  }
+}
+
+renderHistory('OTY');
+renderHistory('ITR');
+
+// === Detectar cambios de estado ===
+let previousAlarmStates = {
+  'alarms-external-OTY': null,
+  'alarms-external-ITR': null
+};
+
+function updateAlarms(containerId, value16bit, alarmNames) {
+  const container = document.getElementById(containerId);
+  const prev = previousAlarmStates[containerId];
+  const current = [];
+  let hasActiveAlarm = false;
+
+  container.innerHTML = '';
+
+  // Recorremos de bit 0 a 15 (orden consistente)
+  for (let i = 0; i < 16; i++) {
+    const bit = (value16bit >> i) & 1;
+    current[i] = bit;
+    if (bit) hasActiveAlarm = true;
+
+    // Solo registrar si ya hubo lectura previa y hay cambio
+    if (prev && prev[i] !== bit) {
+      const name = alarmNames[i];
+      const site = containerId.includes('OTY') ? 'OTY' : 'ITR';
+      const state = bit ? '🚨 ACTIVADA' : '✅ CESÓ';
+      logAlarmChange(site, name, state);
     }
-    insertarFiguras('tab-0', figuraMapaOTY);
-    insertarFiguras('tab-1', figuraMapaITR);
 
-    // === Actualizar alarmas y figuras ===
-    let previousAlarmStates = { 'alarms-external-OTY': null, 'alarms-external-ITR': null };
-    function updateAlarms(containerId, value16bit, alarmNames){
-      const container = document.getElementBy
+    const div = document.createElement('div');
+    div.className = 'alarm ' + (bit ? 'active' : 'inactive');
+    div.textContent = `A${i} - ${alarmNames[i]}: ${bit ? '🚨 Alarma activa' : '✅ Sin alarma'}`;
+    container.appendChild(div);
+  }
+
+  previousAlarmStates[containerId] = current;
+
+  if (containerId === 'alarms-external-OTY') toggleAlarmTab(0, hasActiveAlarm);
+  if (containerId === 'alarms-external-ITR') toggleAlarmTab(1, hasActiveAlarm);
+}
+  </script>
+</body>
+</html>
