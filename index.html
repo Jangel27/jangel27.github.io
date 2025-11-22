@@ -231,13 +231,11 @@
     }
     .clear-btn:hover {
       background: #e60000;
-    }
-
-    .generador, .bateria , .poste, .termometro, .ats, .circuit-breaker, .rectificador-simbolo, .barra-tierra, .persona, .flecha-rayo{
-        display: inline-block;
-        margin: 20px;
-        text-align: center;
-        cursor: pointer;
+      
+    .generador{
+      position: absolute;
+      bottom: -220px;
+      left: -60px;
     }
 
     /* Solo líneas, sin relleno */
@@ -301,7 +299,6 @@
     </div>
   </div>
       
-<h2>Generador Eléctrico (SVG)</h2>
 <div id="generador" class="generador">
     <svg width="200" height="150" viewBox="0 0 200 150">
         <rect class="gen-base" x="20" y="100" width="160" height="20" rx="4"></rect>
