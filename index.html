@@ -232,6 +232,27 @@
     .clear-btn:hover {
       background: #e60000;
     }
+
+    .generador, .bateria , .poste, .termometro, .ats, .circuit-breaker, .rectificador-simbolo, .barra-tierra, .persona, .flecha-rayo{
+        display: inline-block;
+        margin: 20px;
+        text-align: center;
+        cursor: pointer;
+    }
+
+    /* Solo líneas, sin relleno */
+    .gen-body, .gen-base {
+        fill: none;
+        stroke: black;
+        stroke-width: 2;
+    }
+
+    button {
+        margin: 10px;
+        padding: 8px 12px;
+        cursor: pointer;
+    }
+    
   </style>
 </head>
 <body>
@@ -279,7 +300,19 @@
       </div>
     </div>
   </div>
-
+      
+<h2>Generador Eléctrico (SVG)</h2>
+<div id="generador" class="generador">
+    <svg width="200" height="150" viewBox="0 0 200 150">
+        <rect class="gen-base" x="20" y="100" width="160" height="20" rx="4"></rect>
+        <rect class="gen-body" x="40" y="40" width="120" height="60" rx="8"></rect>
+        <text x="102" y="95" font-size="28" text-anchor="middle" fill="black" font-family="Arial" font-weight="bold">G E</text>
+        <polyline points="100,45 90,70 110,70 100,95" stroke="orange" stroke-width="3" fill="none"></polyline>
+        <circle cx="60" cy="60" r="5" fill="red"></circle>
+        <circle cx="140" cy="60" r="5" fill="green"></circle>
+    </svg>
+</div>
+      
   <script>
     // MQTT conexión WebSocket
     const client = mqtt.connect('wss://d4e6f442.ala.us-east-1.emqxsl.com:8084/mqtt', {
