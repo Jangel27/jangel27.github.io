@@ -181,12 +181,12 @@
     .rectificador{
       position: absolute;
       bottom: -20px;
-      left: 380px;
+      left: 385px;
     }
     .breaker{
       position: absolute;
       bottom: 110px;
-      left: 410px;
+      left: 415px;
     }
 
     .tank-container {
@@ -325,8 +325,23 @@
           <rect x="60" y="45" width="5" height="25" fill="none" stroke="black" stroke-width="3" rx="3" />
           <rect x="47.5" y="75" width="5" height="28" fill="none" stroke="black" stroke-width="3" rx="3"/>
           <rect x="52.5" y="75" width="5" height="28" fill="none" stroke="black" stroke-width="3" rx="3"/>
-         </svg>
-         </div>
+          </svg>
+          </div>
+          <div id="rectificador" class="rectificador">
+          <svg width="200" height="100" viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
+          <line x1="20" y1="20" x2="40" y2="20" stroke="black" stroke-width="3"/>
+          <line x1="20" y1="60" x2="40" y2="60" stroke="black" stroke-width="3"/>
+          <rect x="40" y="10" width="80" height="60" fill="none" stroke="black" stroke-width="3"/>
+          <line x1="40" y1="10" x2="120" y2="70" stroke="black" stroke-width="1"/>
+          <path d="M 47.5 45 q 17.5 -30 25 0 q 7.5 30 15 0" fill="none" stroke="black" stroke-width="3" />
+          <line x1="80" y1="25" x2="100" y2="25" stroke="black" stroke-width="5" />
+          <line x1="80" y1="30" x2="100" y2="30" stroke="black" stroke-width="3" />
+          <line x1="120" y1="20" x2="140" y2="20" stroke="black" stroke-width="3" />
+          <line x1="120" y1="60" x2="140" y2="60" stroke="black" stroke-width="3" />
+          <text x="130" y="20" font-family="Arial" font-size="20" fill="black">+</text>
+          <text x="130" y="60" font-family="Arial" font-size="20" fill="black">−</text>
+          </svg>
+          </div>
           <div id="rectificador" class="rectificador">
           <svg width="200" height="100" viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
           <line x1="20" y1="20" x2="40" y2="20" stroke="black" stroke-width="3"/>
@@ -369,7 +384,6 @@
           </g>
           </svg>
           </div>
-
           <div id="generador" class="generador">
             <svg width="200" height="150" viewBox="0 0 200 150">
             <rect class="gen-base" x="20" y="100" width="160" height="20" rx="4"></rect>
