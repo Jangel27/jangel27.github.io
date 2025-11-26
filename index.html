@@ -262,8 +262,8 @@
     }
     .flecha-rayo1{
       position: absolute;
-      bottom: -200px;
-      left: 260px;
+      bottom: -250px;
+      left: 240px;
     }
       .flecha-rayo2{
       position: absolute;
@@ -440,18 +440,39 @@
              <div id="flecha-rayo1" class="flecha-rayo1">
              <svg width="350" height="200" viewBox="0 0 300 200">
              <defs>
-             <!-- Punta de flecha fija horizontal -->
              <marker id="arrow" markerWidth="8" markerHeight="8" refX="1" refY="3" orient="0" markerUnits="strokeWidth">
              <path d="M0,0 L0,6 L9,3 z" fill="orange"/>
              </marker>
              </defs>
              <g transform="scale(0.95)" vector-effect="non-scaling-stroke">
-             <!-- Zig-zag original -->
              <polyline points="45,100 70,90 70,110 95,100" stroke="orange" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
              </g>
              </svg>
              </div>
-
+             <div id="flecha-rayo2" class="flecha-rayo2">
+             <svg width="350" height="200" viewBox="0 0 300 200">
+             <defs>
+             <marker id="arrow" markerWidth="8" markerHeight="8" refX="1" refY="3" orient="0" markerUnits="strokeWidth">
+             <path d="M0,0 L0,6 L9,3 z" fill="orange"/>
+             </marker>
+             </defs>
+             <g transform="scale(0.95) rotate(180 150 40)" vector-effect="non-scaling-stroke">
+             <polyline points="45,100 70,90 70,110 95,100" stroke="orange" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+             </g>
+             </svg>
+             </div>
+             <div id="flecha-rayo3" class="flecha-rayo3">
+             <svg width="350" height="200" viewBox="0 0 300 200">
+             <defs>
+             <marker id="arrow" markerWidth="8" markerHeight="8" refX="1" refY="3" orient="0" markerUnits="strokeWidth">
+             <path d="M0,0 L0,6 L9,3 z" fill="orange"/>
+             </marker>
+             </defs>
+             <g transform="scale(0.95) rotate(270 150 40)" vector-effect="non-scaling-stroke">
+             <polyline points="45,100 70,90 70,110 95,100" stroke="orange" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+             </g>
+             </svg>
+             </div>
              <div id="flecha-rayo2" class="flecha-rayo2">
              <svg width="300" height="80" viewBox="0 0 300 80">
              <g transform="scale(0.35) rotate(180 150 40)" vector-effect="non-scaling-stroke">
