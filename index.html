@@ -191,11 +191,11 @@
     .rectificador{
       position: absolute;
       bottom: -10px;
-      left: 385px;
+      left: 405px;
     }
     .breaker{
       position: absolute;
-      bottom: 130px;
+      bottom: 120px;
       left: 415px;
     }
 
@@ -264,7 +264,11 @@
       bottom: -240px;
       left: 350px;
     }
-    
+    .flecha-rayo1{
+      position: absolute;
+      bottom: -220px;
+      left: 360px;
+    }
     .poste{
       position: absolute;
       bottom: -245px;
@@ -369,8 +373,8 @@
           <rect x="40" y="10" width="120" height="80" fill="none" stroke="black" stroke-width="3"/>
           <line x1="40" y1="10" x2="160" y2="90" stroke="black" stroke-width="1"/>
           <path d="M 50 60 q 10 -40 20 0 q 10 40 20 0" fill="none" stroke="black" stroke-width="3" />
-          <line x1="130" y1="55" x2="150" y2="55" stroke="black" stroke-width="5" />
-          <line x1="130" y1="65" x2="150" y2="65" stroke="black" stroke-width="3" />
+          <line x1="130" y1="35" x2="150" y2="35" stroke="black" stroke-width="5" />
+          <line x1="130" y1="45" x2="150" y2="45" stroke="black" stroke-width="3" />
           <line x1="160" y1="30" x2="200" y2="30" stroke="black" stroke-width="3" />
           <line x1="160" y1="70" x2="200" y2="70" stroke="black" stroke-width="3" />
           <text x="205" y="35" font-family="Arial" font-size="20" fill="black">+</text>
@@ -426,7 +430,13 @@
              <line x1="75" y1="90" x2="45" y2="105" stroke="red" stroke-width="2"></line>
              <line x1="75" y1="90" x2="105" y2="105" stroke="green" stroke-width="2"></line>
              </svg>
-            </div> 
+             </div> 
+             <div id="flecha-rayo1" class="flecha-rayo1">
+             <svg width="300" height="80" viewBox="0 0 300 80">
+             <polyline points="20,40 60,20 100,40 140,20 180,40" fill="none" stroke="black" stroke-width="5" stroke-linejoin="round"/>
+             <polygon points="195,38 175,23 175,53" fill="black"/>
+             </svg>
+             </div>
              <div id="poste" class="poste">
              <svg width="100" height="200" viewBox="0 0 50 150">
              <rect x="22" y="30" width="6" height="100" fill="saddlebrown"></rect>
