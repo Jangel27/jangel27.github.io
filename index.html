@@ -198,13 +198,11 @@
       bottom: 120px;
       left: 415px;
     }
-
     .tank-container {
       display: flex;
       justify-content: center;
       align-items: center;
     }
-
     #diesel-tank {
       position: absolute;
       bottom: -220px;
@@ -246,14 +244,12 @@
       bottom: -255px;
       left: 130px;
     }
-
     /* Solo líneas, sin relleno */
     .gen-body, .gen-base {
         fill: none;
         stroke: black;
         stroke-width: 2;
     }
-
     .button {
         margin: 10px;
         padding: 8px 12px;
@@ -266,7 +262,7 @@
     }
     .flecha-rayo1{
       position: absolute;
-      bottom: -210px;
+      bottom: -200px;
       left: 260px;
     }
       .flecha-rayo2{
@@ -442,9 +438,15 @@
              </svg>
              </div> 
              <div id="flecha-rayo1" class="flecha-rayo1">
-             <svg width="350" height="150" viewBox="0 0 300 80">
+             <svg width="350" height="200" viewBox="0 0 300 80">
+             <defs>
+             <!-- Definición de la punta de flecha -->
+             <marker id="arrow" markerWidth="10" markerHeight="10" refX="5" refY="3" orient="auto" markerUnits="strokeWidth">
+             <path d="M0,0 L0,6 L6,3 z" fill="orange" />
+             </marker>
+             </defs>
              <g transform="scale(0.95)" vector-effect="non-scaling-stroke">
-             <polyline points="45,100 70,90 70,110 95,100" stroke="orange" stroke-width="3" fill="none" marker-end="url(#arrow)" />            
+             <polyline points="45,100 70,90 70,110 95,100" stroke="orange" stroke-width="3" fill="none" marker-end="url(#arrow)" />
              </g>
              </svg>
              </div>
