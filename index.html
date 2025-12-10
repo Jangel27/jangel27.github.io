@@ -865,8 +865,8 @@ function updateAlarms(containerId, value16bit, alarmNames) {
   for (let i = 0; i < 16; i++) {
     const bit = (value16bit >> i) & 1;
     // === Control de figuras en ambas pestañas ===
-		if (figureMap[i]) {
-  	const fig = document.getElementById(figureMap[i]);
+		if (figureMapITR[i]) {
+  	const fig = document.getElementById(figureMapITR[i]);
   	if (fig) {
     if (bit) {
       fig.classList.add("alarm-figure-active");
