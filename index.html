@@ -830,26 +830,26 @@ let previousAlarmStates = {
 };
 // Mapa de alarmas -> figuras 
 const figureMapOTY = {
-  0: "poste",
-  1: "generador",
-  2: "breaker",
-  3: "rectificador",
-  4: "termometro",
-  5: "bateria",
-  6: "bateria",
-  7: "persona",
-  8: "barra-tierra",
+  0: "poste_OTY",
+  1: "generador_OTY",
+  2: "breaker_OTY",
+  3: "rectificador_OTY",
+  4: "termometro_OTY",
+  5: "bateria_OTY",
+  6: "bateria_OTY",
+  7: "persona_OTY",
+  8: "barra-tierra_OTY",
 };
 const figureMapITR = {
-  0: "poste",
-  1: "generador",
-  2: "breaker",
-  3: "rectificador",
-  4: "termometro",
-  5: "bateria",
-  6: "bateria",
-  7: "persona",
-  8: "barra-tierra",
+  0: "poste_ITR",
+  1: "generador_ITR",
+  2: "breaker_ITR",
+  3: "rectificador_ITR",
+  4: "termometro_ITR",
+  5: "bateria_ITR",
+  6: "bateria_ITR",
+  7: "persona_ITR",
+  8: "barra-tierra_ITR",
 };
 	  
 
@@ -858,15 +858,17 @@ function updateAlarms(containerId, value16bit, alarmNames) {
   const prev = previousAlarmStates[containerId];
   const current = [];
   let hasActiveAlarm = false;
+// Seleccionar el mapa de figuras según la pestaña
+  const figureMap = containerId.includes("OTY") ? figureMapOTY : figureMapITR;
 
   container.innerHTML = '';
 
   // Recorremos de bit 0 a 15 (orden consistente)
   for (let i = 0; i < 16; i++) {
     const bit = (value16bit >> i) & 1;
-    // === Control de figuras en ambas pestañas ===
-		if (figureMapITR[i]) {
-  	const fig = document.getElementById(figureMapITR[i]);
+    // === Control de figuras SOLO de la pestaña correspondiente ===
+		if (figureMap[i]) {
+  	const fig = document.getElementById(figureMap[i]);
   	if (fig) {
     if (bit) {
       fig.classList.add("alarm-figure-active");
