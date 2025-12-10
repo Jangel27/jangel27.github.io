@@ -198,6 +198,13 @@
       bottom: 120px;
       left: 395px;
     }
+
+	.external-figures {
+  	position: relative;       /* referencia para todas las figuras dentro */
+  	width: 100%;
+  	height: 300px;           /* ajusta según cuánto espacio debajo de la casa necesites */
+  	margin-top: 20px;        /* separación de la casa */
+	}
   	.tank-container {
   	position: absolute;
   	bottom: 0px; /* ajusta según la posición que quieras */
@@ -457,13 +464,15 @@
 	</div>
 </div>
 		<!-- Figuras externas: independientes de la casa -->
+		<!-- Contenedor para figuras externas -->
+  		<div class="external-figures">
 		<div id="diesel-tank-container" class="tank-container">
     	<div id="diesel-title">Nivel Diesel</div>
     	<div id="diesel-tank">
       	<div id="diesel-fill"></div>
       	<div id="diesel-text">0%</div>
     	</div>
-  	</div>
+  		</div>
           <div id="generador_OTY" class="generador">
             <svg width="200" height="150" viewBox="0 0 200 150">
             <rect class="gen-base" x="20" y="100" width="160" height="20" rx="4"></rect>
@@ -527,7 +536,7 @@
              </div>
           </div>
 	  </div>
-
+	</div>
 
 
 
