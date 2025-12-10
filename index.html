@@ -305,7 +305,23 @@
     .clear-btn:hover {
       background: #e60000;
     }
-    
+    /* Color rojo a la figura */
+		.alarm-figure-active svg * {
+  	stroke: red !important;
+  	fill: red !important;
+		}
+
+		/* Parpadeo cada 2 segundos */
+		@keyframes parpadeo {
+  	0%   { opacity: 1; }
+  	50%  { opacity: 0.1; }
+  	100% { opacity: 1; }
+		}
+
+		.alarm-blink {
+  	animation: parpadeo 2s infinite;
+		}
+
     
   </style>
 </head>
@@ -389,7 +405,7 @@
           <line x1="160" y1="30" x2="200" y2="30" stroke="black" stroke-width="3" />
           <line x1="160" y1="70" x2="200" y2="70" stroke="black" stroke-width="3" />
           <text x="205" y="35" font-family="Arial" font-size="20" fill="black">+</text>
-          <text x="205" y="75" font-family="Arial" font-size="20" fill="black">−</text>
+          <text x="205" y="75" font-family="Arial" font-size="20" fill="black">-</text>
           </g>
           </svg>
           </div>
@@ -555,7 +571,7 @@
           <line x1="160" y1="30" x2="200" y2="30" stroke="black" stroke-width="3" />
           <line x1="160" y1="70" x2="200" y2="70" stroke="black" stroke-width="3" />
           <text x="205" y="35" font-family="Arial" font-size="20" fill="black">+</text>
-          <text x="205" y="75" font-family="Arial" font-size="20" fill="black">−</text>
+          <text x="205" y="75" font-family="Arial" font-size="20" fill="black">-</text>
           </g>
           </svg>
           </div>
@@ -674,14 +690,14 @@
     const alarmNamesExternalOTY = [
       "FALLA*ALIM*COM*OTY","GPO*ELEC*OPER*OTY","FALLA*FUS*DIST*A*OTY","FALLA*RECT*A*OTY",
       "ALTA*TEMP*CX*OTY","FALLA*FUS*VOLTA*A*OTY","BAT*EN*OPER*A*OTY","BAJO*VOLTAJE*A*OTY",
-      "ALARMA LIBRE 1","ALARMA LIBRE 2","ALARMA LIBRE 3","ALARMA LIBRE 4",
+      "PRESENCIA*BANCO*BAT*OTY","ROBO*BARRA*TIERRA*OTY","ALARMA LIBRE 3","ALARMA LIBRE 4",
       "ALARMA LIBRE 5","ALARMA LIBRE 6","ALARMA LIBRE 7","ALARMA LIBRE 8"
     ];
 
     const alarmNamesExternalITR = [
       "FALLA*ALIM*COM*ITR","GPO*ELEC*OPER*ITR","FALLA*FUS*DIST*A*ITR","FALLA*RECT*A*ITR",
       "ALTA*TEMP*CX*ITR","FALLA*FUS*VOLTA*A*ITR","BAT*EN*OPER*A*ITR","BAJO*VOLTAJE*A*ITR",
-      "ALARMA LIBRE 1","ALARMA LIBRE 2","ALARMA LIBRE 3","ALARMA LIBRE 4",
+      "PRESENCIA*BANCO*BAT*ITR","ROBO*BARRA*TIERRA*ITR","ALARMA LIBRE 3","ALARMA LIBRE 4",
       "ALARMA LIBRE 5","ALARMA LIBRE 6","ALARMA LIBRE 7","ALARMA LIBRE 8"
     ];
 
@@ -706,6 +722,7 @@
         } else {
           document.getElementById('byte-external-ITR').textContent =
             `Bytes recibidos (ITR): ${highByte}, ${lowByte} | bin: ${binStr}`;
+            
           updateAlarms('alarms-external-ITR', value, alarmNamesExternalITR);
         }
       } else if (topic === 'esp32/NivelDiesel_ITR') {
@@ -757,16 +774,16 @@ function createHistoryContainers() {
 
   const otyHistoryDiv = document.createElement('div');
   otyHistoryDiv.innerHTML = `
-    <h3>📜 Historial de Alarmas OTY</h3>
-    <button class="clear-btn" onclick="clearHistory('OTY')">🧹 Limpiar Historial OTY</button>
+    <h3>?? Historial de Alarmas OTY</h3>
+    <button class="clear-btn" onclick="clearHistory('OTY')">?? Limpiar Historial OTY</button>
     <ul id="history-OTY" class="history-box"></ul>
   `;
   otyTab.appendChild(otyHistoryDiv);
 
   const itrHistoryDiv = document.createElement('div');
   itrHistoryDiv.innerHTML = `
-    <h3>📜 Historial de Alarmas ITR</h3>
-    <button class="clear-btn" onclick="clearHistory('ITR')">🧹 Limpiar Historial ITR</button>
+    <h3>?? Historial de Alarmas ITR</h3>
+    <button class="clear-btn" onclick="clearHistory('ITR')">?? Limpiar Historial ITR</button>
     <ul id="history-ITR" class="history-box"></ul>
   `;
   itrTab.appendChild(itrHistoryDiv);
@@ -783,12 +800,12 @@ function renderHistory(site) {
 function addHistoryEntry(site, entry) {
   const list = document.getElementById(`history-${site}`);
   const li = document.createElement('li');
-  li.textContent = `[${entry.time}] ${entry.name} → ${entry.state}`;
+  li.textContent = `[${entry.time}] ${entry.name} ? ${entry.state}`;
   list.prepend(li);
 }
 
 function logAlarmChange(site, name, state) {
-  // Solo registrar si hay un cambio de estado real (0→1 o 1→0)
+  // Solo registrar si hay un cambio de estado real (0?1 o 1?0)
   const timestamp = new Date().toLocaleString();
   const entry = { time: timestamp, name, state };
   alarmHistory[site].push(entry);
@@ -812,6 +829,19 @@ let previousAlarmStates = {
   'alarms-external-OTY': null,
   'alarms-external-ITR': null
 };
+// Mapa de alarmas -> figuras (IGUAL para OTY e ITR)
+const figureMap = {
+  0: "poste",
+  1: "generador",
+  2: "breaker",
+  3: "rectificador",
+  4: "termometro",
+  5: "bateria",
+  6: "bateria",
+  7: "persona",
+  8: "barra-tierra",
+
+};
 
 function updateAlarms(containerId, value16bit, alarmNames) {
   const container = document.getElementById(containerId);
@@ -824,6 +854,19 @@ function updateAlarms(containerId, value16bit, alarmNames) {
   // Recorremos de bit 0 a 15 (orden consistente)
   for (let i = 0; i < 16; i++) {
     const bit = (value16bit >> i) & 1;
+    // === Control de figuras en ambas pestañas ===
+		if (figureMap[i]) {
+  	const fig = document.getElementById(figureMap[i]);
+  	if (fig) {
+    if (bit) {
+      fig.classList.add("alarm-figure-active");
+      fig.classList.add("alarm-blink");      // <- PARPADEO
+    } else {
+      fig.classList.remove("alarm-figure-active");
+      fig.classList.remove("alarm-blink");
+    }
+  }
+}
     current[i] = bit;
     if (bit) hasActiveAlarm = true;
 
@@ -831,13 +874,13 @@ function updateAlarms(containerId, value16bit, alarmNames) {
     if (prev && prev[i] !== bit) {
       const name = alarmNames[i];
       const site = containerId.includes('OTY') ? 'OTY' : 'ITR';
-      const state = bit ? '🚨 ACTIVADA' : '✅ CESÓ';
+      const state = bit ? '?? ACTIVADA' : '? CESÓ';
       logAlarmChange(site, name, state);
     }
 
     const div = document.createElement('div');
     div.className = 'alarm ' + (bit ? 'active' : 'inactive');
-    div.textContent = `A${i} - ${alarmNames[i]}: ${bit ? '🚨 Alarma activa' : '✅ Sin alarma'}`;
+    div.textContent = `A${i} - ${alarmNames[i]}: ${bit ? '?? Alarma activa' : '? Sin alarma'}`;
     container.appendChild(div);
   }
 
