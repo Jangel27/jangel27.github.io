@@ -850,7 +850,6 @@ const figureMapITR = {
   7: "persona_ITR",
   8: "barra-tierra_ITR",
 };
-	  
 
 function updateAlarms(containerId, value16bit, alarmNames) {
   const container = document.getElementById(containerId);
@@ -858,15 +857,18 @@ function updateAlarms(containerId, value16bit, alarmNames) {
   const current = [];
   let hasActiveAlarm = false;
 // Seleccionar el mapa de figuras según la pestaña
-  const figureMap = containerId.includes("OTY") ? figureMapOTY : figureMapITR;
+  let figureMap = null;
 
-  container.innerHTML = '';
+if (containerId === "alarms-external-OTY") figureMap = figureMapOTY;
+if (containerId === "alarms-external-ITR") figureMap = figureMapITR;
+  
+	container.innerHTML = '';
 
   // Recorremos de bit 0 a 15 (orden consistente)
   for (let i = 0; i < 16; i++) {
     const bit = (value16bit >> i) & 1;
     // === Control de figuras SOLO de la pestaña correspondiente ===
-		if (figureMap[i]) {
+	if (figureMap && figureMap[i]) {
   	const fig = document.getElementById(figureMap[i]);
   	if (fig) {
     if (bit) {
