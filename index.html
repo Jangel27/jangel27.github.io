@@ -369,6 +369,7 @@
           <div class="walls"></div>
           <div class="door"></div>
           <div class="window"></div>
+			
 		<!-- Figuras dentro de la casa -->
           <div id="bateria_OTY" class="bateria">
           <svg width="100" height="140" viewBox="0 0 60 120">
@@ -464,7 +465,7 @@
           </div>
 		</div>
 		</div>
-		</div>
+		
 		<!-- Figuras externas: independientes de la casa -->
 		<!-- Contenedor para figuras externas -->
   		<div class="external-figures">
@@ -530,7 +531,7 @@
              </svg>
              </div>
           </div>
-	  
+	  </div>
 	</div>
 
 
@@ -539,21 +540,18 @@
   <div id="tab-1" class="tab-content">
     <div class="byte-info" id="byte-external-ITR">Esperando datos de ITR...</div>
     <div class="alarms-house-layout">
+	<!-- Contenedor de alarmas -->
       <div class="alarms-container" id="alarms-external-ITR"></div>
+	<!-- Área de la casa -->	
       <div class="house-area">
         <div class="house-drawing">
           <div class="roof"></div>
           <div class="walls"></div>
           <div class="door"></div>
           <div class="window"></div>
-			<div class="tank-area">
-  			<div id="diesel-title">Diesel</div>
-  			<div id="diesel-tank">
-   			<div id="diesel-fill"></div>
-    		<div id="diesel-text">0%</div>
-  			</div>
-			</div>
-        <div id="bateria_ITR" class="bateria">
+			
+		<!-- Figuras dentro de la casa -->
+       	 <div id="bateria_ITR" class="bateria">
           <svg width="100" height="140" viewBox="0 0 60 120">
           <rect x="0" y="20" width="60" height="50" rx="5" ry="5" fill="none" stroke="black" stroke-width="2"></rect>
           <line x1="15" y1="20" x2="15" y2="70" stroke="black" stroke-width="1"></line>
@@ -645,6 +643,18 @@
           <rect x="52.5" y="75" width="5" height="28" fill="none" stroke="black" stroke-width="3" rx="3"/>
          </svg>
          </div>
+		</div>
+		</div>
+		<!-- Figuras externas: independientes de la casa -->
+		<!-- Contenedor para figuras externas -->
+  		<div class="external-figures">
+		<div class="tank-area">
+  		<div id="diesel-title">Nivel Diesel</div>
+  		<div id="diesel-tank">
+   		<div id="diesel-fill"></div>
+    	<div id="diesel-text">0%</div>
+  		</div>
+		</div>
           <div id="generador_ITR" class="generador">
             <svg width="200" height="150" viewBox="0 0 200 150">
             <rect class="gen-base" x="20" y="100" width="160" height="20" rx="4"></rect>
@@ -710,8 +720,7 @@
            </div>
           </div>
          </div>
-        </div>
-      
+            
   <script>
     // MQTT conexión WebSocket
     const client = mqtt.connect('wss://d4e6f442.ala.us-east-1.emqxsl.com:8084/mqtt', {
