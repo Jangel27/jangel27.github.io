@@ -925,7 +925,7 @@ if (containerId === "alarms-external-ITR") figureMap = figureMapITR;
     if (bit) hasActiveAlarm = true;
 
     // Solo registrar si ya hubo lectura previa y hay cambio
-    if (prev && prev[i] !== undefined && prev[i] !== bit) {
+    if (prev && prev[i] !== bit) {
       const name = alarmNames[i];
       const site = containerId.includes('OTY') ? 'OTY' : 'ITR';
       const state = bit ? '?? ACTIVADA' : '?? CESÓ';
