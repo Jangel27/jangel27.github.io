@@ -205,24 +205,23 @@
   	margin-top: 20px;        /* separación de la casa */
 	}
 	  
-    .tank-container {
-	  display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    #diesel-tank {
-      position: absolute;
-      bottom: -220px;
-      left: -60px;
-      width: 155px;
-      height: 75px;
-      border: 4px solid #555;
-      border-radius: 60px;
-      background: radial-gradient(circle at 50% 30%, #fff176 0%, #FAD201 60%, #c9a801 100%);
-      box-shadow: inset -6px 0 10px rgba(0, 0, 0, 0.3),
-                  inset 6px 0 10px rgba(255, 255, 255, 0.5);
-      overflow: hidden;
-    }
+  	.tank-container {
+  	position: absolute;
+  	bottom: 0px; /* ajusta según la posición que quieras */
+  	left: 10px;
+	}
+
+	#diesel-tank {
+	position: absolute;
+  	width: 155px;
+  	height: 75px;
+  	border: 4px solid #555;
+  	border-radius: 60px;
+  	background: radial-gradient(circle at 50% 30%, #fff176 0%, #FAD201 60%, #c9a801 100%);
+  	box-shadow: inset -6px 0 10px rgba(0,0,0,0.3), inset 6px 0 10px rgba(255,255,255,0.5);
+  	overflow: hidden;
+  	position: relative;
+	}
 
     #diesel-fill {
       position: absolute;
@@ -639,13 +638,13 @@
 	</div>
 		<!-- Contenedor para figuras externas -->
   		<div class="external-figures">
-			<div class="tank-container">
-				<div id="diesel-title">Nivel Diesel</div>
-		  		<div id="diesel-tank">
-          		<div id="diesel-fill"></div>
-          		<div id="diesel-text">0%</div>
-		  	</div>
-		</div>
+			<div class="tank-area">
+  				<div id="diesel-title">Nivel Diesel</div>
+  				<div id="diesel-tank">
+   					<div id="diesel-fill"></div>
+    				<div id="diesel-text">0%</div>
+  				</div>
+			</div>
           <div id="generador_ITR" class="generador">
             <svg width="200" height="150" viewBox="0 0 200 150">
             <rect class="gen-base" x="20" y="100" width="160" height="20" rx="4"></rect>
