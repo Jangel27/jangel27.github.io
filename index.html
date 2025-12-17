@@ -343,21 +343,21 @@
       background: #e60000;
     }
     /* Color rojo a la figura */
-		.alarm-figure-active svg * {
+	.alarm-figure-active svg * {
   	stroke: red !important;
   	fill: red !important;
 		}
 
-		/* Parpadeo cada 2 segundos */
-		@keyframes parpadeo {
+	/* Parpadeo cada 2 segundos */
+	@keyframes parpadeo {
   	0%   { opacity: 1; }
   	50%  { opacity: 0.1; }
   	100% { opacity: 1; }
 		}
 
-		.alarm-blink {
+	.alarm-blink {
   	animation: parpadeo 2s infinite;
-		}
+	}
 
   </style>
 </head>
@@ -791,8 +791,8 @@ function createHistoryContainers() {
 
   const itrHistoryDiv = document.createElement('div');
   itrHistoryDiv.innerHTML = `
-    <h3>?? Historial de Alarmas ITR</h3>
-    <button class="clear-btn" onclick="clearHistory('ITR')">?? Limpiar Historial ITR</button>
+    <h3> &#128680 Historial de Alarmas ITR</h3>
+    <button class="clear-btn" onclick="clearHistory('ITR')"> &#128680 Limpiar Historial ITR</button>
     <ul id="history-ITR" class="history-box"></ul>
   `;
   itrTab.appendChild(itrHistoryDiv);
@@ -900,13 +900,13 @@ if (containerId === "alarms-external-ITR") figureMap = figureMapITR;
     if (prev && prev[i] !== bit) {
       const name = alarmNames[i];
       const site = containerId.includes('OTY') ? 'OTY' : 'ITR';
-      const state = bit ? '?? ACTIVADA' : '? CESÓ';
+      const state = bit ? '&#128680 ACTIVADA' : '? CESÓ';
       logAlarmChange(site, name, state);
     }
 
     const div = document.createElement('div');
     div.className = 'alarm ' + (bit ? 'active' : 'inactive');
-    div.textContent = `A${i} - ${alarmNames[i]}: ${bit ? '?? Alarma activa' : '? Sin alarma'}`;
+    div.textContent = `A${i} - ${alarmNames[i]}: ${bit ? '&#128680 Alarma activa' : '? Sin alarma'}`;
     container.appendChild(div);
   }
 
