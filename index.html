@@ -708,13 +708,22 @@
 </div>
   <script>
     // MQTT conexión WebSocket
-      const client = mqtt.connect('wss://d4e6f442.ala.us-east-1.emqxsl.com:8084/mqtt', {
+      /*const client = mqtt.connect('wss://d4e6f442.ala.us-east-1.emqxsl.com:8084/mqtt', {
       	clientId: 'web_' + Math.random().toString(16).substr(2, 8),
       	username: 'Olivas',
       	password: 'Jangel27',
-		clean: true,
-		rejectUnauthorized: false
-    });
+		clean: true
+    });*/
+
+	// Cambiamos el puerto de 8084 a 443 para navegacion en empresa
+	const client = mqtt.connect('wss://d4e6f442.ala.us-east-1.emqxsl.com:443/mqtt', {
+  	clientId: 'web_' + Math.random().toString(16).substr(2, 8),
+  	username: 'Olivas',
+  	password: 'Jangel27',
+  	keepalive: 60,
+  	reconnectPeriod: 1000,
+  	connectTimeout: 30 * 1000,
+	});
 	  
 
     const alarmNamesExternalOTY = [
