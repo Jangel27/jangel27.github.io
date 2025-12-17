@@ -47,14 +47,19 @@
     }
 
     .alarms-house-layout {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 20px;
+    	display: flex;
+      	justify-content: flex-start;
+      	align-items: flex-start;
+		/*Espacio Fijo entre alarmas y dibujo*/
+      	gap: 40px;
+		/* Centramos todo el conjunto en la pantalla por si sobra espacio a los lados */
+		max-width: 1200px;
+  		margin: 0 auto;
     }
 
     .alarms-container {
-      flex: 1;
+    	flex: 0 0 auto; 
+  		width: 280px;
     }
 
     .alarm {
@@ -84,10 +89,12 @@
 
     /* ====== Área de la casa ====== */
     .house-area {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-top: 20px;
+    	display: flex;
+      	flex-direction: column;
+      	align-items: center;
+      	margin-top: 20px;
+		/* Permitimos que la casa mantenga su lugar */
+  		flex: 0 0 auto;
     }
 
     .house-drawing {
