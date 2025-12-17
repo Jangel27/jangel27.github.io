@@ -707,25 +707,18 @@
 </div>
 </div>
   <script>
+
+	 */ Para que se actualicen los datos del broker EMQX es necesario pedir a sistemas que*/
+	 */pongan en "Lista Blanca" (Whitelist) el dominio *.emqxsl.com para el puerto, 8084*/
+	  
     // MQTT conexión WebSocket
-      /*const client = mqtt.connect('wss://d4e6f442.ala.us-east-1.emqxsl.com:8084/mqtt', {
+      const client = mqtt.connect('wss://d4e6f442.ala.us-east-1.emqxsl.com:8084', {
       	clientId: 'web_' + Math.random().toString(16).substr(2, 8),
       	username: 'Olivas',
       	password: 'Jangel27',
 		clean: true
-    });*/
-
-	// Cambiamos el puerto de 8084 a 443 para navegacion en empresa
-	const client = mqtt.connect('wss://d4e6f442.ala.us-east-1.emqxsl.com:443', {
-  	clientId: 'web_' + Math.random().toString(16).substr(2, 8),
-  	username: 'Olivas',
-  	password: 'Jangel27',
-  	keepalive: 60,
-  	reconnectPeriod: 1000,
-  	connectTimeout: 30 * 1000,
-	});
-	  
-
+    });
+	
     const alarmNamesExternalOTY = [
       "FALLA*ALIM*COM*OTY","GPO*ELEC*OPER*OTY","FALLA*FUS*DIST*A*OTY","FALLA*RECT*A*OTY",
       "ALTA*TEMP*CX*OTY","FALLA*FUS*VOLTA*A*OTY","BAT*EN*OPER*A*OTY","BAJO*VOLTAJE*A*OTY",
