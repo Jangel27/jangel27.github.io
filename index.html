@@ -783,8 +783,8 @@ function createHistoryContainers() {
 
   const otyHistoryDiv = document.createElement('div');
   otyHistoryDiv.innerHTML = `
-    <h3>?? Historial de Alarmas OTY</h3>
-    <button class="clear-btn" onclick="clearHistory('OTY')">?? Limpiar Historial OTY</button>
+    <h3>&#128680 Historial de Alarmas OTY</h3>
+    <button class="clear-btn" onclick="clearHistory('OTY')"> &#128680 Limpiar Historial OTY</button>
     <ul id="history-OTY" class="history-box"></ul>
   `;
   otyTab.appendChild(otyHistoryDiv);
@@ -900,13 +900,13 @@ if (containerId === "alarms-external-ITR") figureMap = figureMapITR;
     if (prev && prev[i] !== bit) {
       const name = alarmNames[i];
       const site = containerId.includes('OTY') ? 'OTY' : 'ITR';
-      const state = bit ? '&#128680 ACTIVADA' : '? CESÓ';
+      const state = bit ? '&#128680 ACTIVADA' : '&#10004 CESÓ';
       logAlarmChange(site, name, state);
     }
 
     const div = document.createElement('div');
     div.className = 'alarm ' + (bit ? 'active' : 'inactive');
-    div.textContent = `A${i} - ${alarmNames[i]}: ${bit ? '&#128680 Alarma activa' : '? Sin alarma'}`;
+    div.textContent = `A${i} - ${alarmNames[i]}: ${bit ? '&#128680 Alarma activa' : '&#10004 Sin alarma'}`;
     container.appendChild(div);
   }
 
