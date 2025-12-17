@@ -712,8 +712,10 @@
       	clientId: 'web_' + Math.random().toString(16).substr(2, 8),
       	username: 'Olivas',
       	password: 'Jangel27',
-		clean: true
+		clean: true,
+		rejectUnauthorized: false
     });
+	  
 
     const alarmNamesExternalOTY = [
       "FALLA*ALIM*COM*OTY","GPO*ELEC*OPER*OTY","FALLA*FUS*DIST*A*OTY","FALLA*RECT*A*OTY",
