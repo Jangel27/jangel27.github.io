@@ -901,17 +901,31 @@ if (containerId === "alarms-external-ITR") figureMap = figureMapITR;
 
   // Recorremos de bit 0 a 15 (orden consistente)
   for (let i = 0; i < 16; i++) {
-    const bit = (value16bit >> i) & 1;
-    // === Control de figuras SOLO de la pestaña correspondiente ===
-	if (figureMap && figureMap[i]) {
-  	const fig = document.getElementById(figureMap[i]);
-  	if (fig) {
-    if (bit) {
-      fig.classList.add("alarm-figure-active");
-      fig.classList.add("alarm-blink");      // <- PARPADEO
+ if (figureMap && figureMap[i]) {
+  const figId = figureMap[i];
+  const fig = document.getElementById(figId);
+
+  if (fig) {
+    // Si es una batería, chequeamos los 3 bits (5, 6 y 7)
+    if (figId.includes("bateria")) {
+      const bit5 = (value16bit >> 5) & 1;
+      const bit6 = (value16bit >> 6) & 1;
+      const bit7 = (value16bit >> 7) & 1;
+
+      // Se activa si CUALQUIERA es 1
+      if (bit5 || bit6 || bit7) {
+        fig.classList.add("alarm-figure-active", "alarm-blink");
+      } else {
+        fig.classList.remove("alarm-figure-active", "alarm-blink");
+      }
     } else {
-      fig.classList.remove("alarm-figure-active");
-      fig.classList.remove("alarm-blink");
+      // Lógica normal para las demás figuras
+      const bit = (value16bit >> i) & 1;
+      if (bit) {
+        fig.classList.add("alarm-figure-active", "alarm-blink");
+      } else {
+        fig.classList.remove("alarm-figure-active", "alarm-blink");
+      }
     }
   }
 }
