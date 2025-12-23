@@ -900,22 +900,26 @@ if (containerId === "alarms-external-ITR") figureMap = figureMapITR;
 	container.innerHTML = '';
 
   // Recorremos de bit 0 a 15 (orden consistente)
-  for (let i = 0; i < 16; i++) {
- if (figureMap && figureMap[i]) {
-  const figId = figureMap[i];
-  const fig = document.getElementById(figId);
-
-  if (fig) {
+for (let i = 0; i < 16; i++) {
+ 	const bit = (value16bit >> i) & 1; // Definimos el bit al inicio del ciclo
+    current[i] = bit;
+    if (bit) hasActiveAlarm = true;
+	// === 1. LÓGICA DE FIGURAS (SVG) ===
+	if (figureMap && figureMap[i]) {
+		const figId = figureMap[i];
+      	const fig = document.getElementById(figId);
+  	if (fig) {
     // Si es una batería, chequeamos los 3 bits (5, 6 y 7)
     if (figId.includes("bateria")) {
-      const bit5 = (value16bit >> 5) & 1;
-      const bit6 = (value16bit >> 6) & 1;
-      const bit7 = (value16bit >> 7) & 1;
+		// Lógica especial: OR entre bits 5, 6 y 7
+      	const bit5 = (value16bit >> 5) & 1;
+      	const bit6 = (value16bit >> 6) & 1;
+      	const bit7 = (value16bit >> 7) & 1;
 
-      // Se activa si CUALQUIERA es 1
-      if (bit5 || bit6 || bit7) {
-        fig.classList.add("alarm-figure-active", "alarm-blink");
-      } else {
+    // Se activa si CUALQUIERA es 1
+    if (bit5 || bit6 || bit7) {
+    	fig.classList.add("alarm-figure-active", "alarm-blink");
+    } else {
         fig.classList.remove("alarm-figure-active", "alarm-blink");
       }
     } else {
@@ -929,17 +933,15 @@ if (containerId === "alarms-external-ITR") figureMap = figureMapITR;
     }
   }
 }
-    current[i] = bit;
-    if (bit) hasActiveAlarm = true;
-
+	// === 2. LÓGICA DE HISTORIAL ===
     // Solo registrar si ya hubo lectura previa y hay cambio
     if (prev && prev[i] !== bit) {
-      const name = alarmNames[i];
-      const site = containerId.includes('OTY') ? 'OTY' : 'ITR';
-      const state = bit ? '🚨 ACTIVADA' : '✅ CESÓ';
-      logAlarmChange(site, name, state);
+      	const name = alarmNames[i];
+      	const site = containerId.includes('OTY') ? 'OTY' : 'ITR';
+      	const state = bit ? '🚨 ACTIVADA' : '✅ CESÓ';
+      	logAlarmChange(site, name, state);
     }
-
+	// === 3. LÓGICA DE ALARMAS (CUADROS EN PANTALLA) ===
     const div = document.createElement('div');
     div.className = 'alarm ' + (bit ? 'active' : 'inactive');
     div.textContent = `A${i} - ${alarmNames[i]}: ${bit ? '🚨 Alarma activa' : '✅ Sin alarma'}`;
