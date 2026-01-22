@@ -5,8 +5,8 @@
   <title>Monitor de Alarmas ESP32 - Global</title>
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
   <style>
-    /* ... Mantenemos todos tus estilos originales ... */
-    body {
+
+body {
 /* Degradado plata metálico */
     background: linear-gradient(
         135deg, 
@@ -790,7 +790,7 @@
     if (topic.includes('External_Alarms')) {
         const value = (message[0] << 8) | message[1];
         const site = topic.includes('OTY') ? 'OTY' : 'ITR';
-        //document.getElementById(`byte-external-${site}`).textContent = `Bytes: ${message[0]}, ${message[1]}`;
+        document.getElementById(`byte-external-${site}`).textContent = `Bytes: ${message[0]}, ${message[1]}`;
 		const alarmNames = (site === 'OTY') ? alarmNamesExternalOTY : alarmNamesExternalITR;
         //updateAlarms(`alarms-external-${site}`, value, site === 'OTY' ? alarmNamesExternalOTY : alarmNamesExternalITR);
 		updateAlarms(`alarms-external-${site}`, value, alarmNames);
