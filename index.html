@@ -889,19 +889,52 @@ body {
   });
 }
 
-    function logAlarmChange(site, name, state) {
-        const entry = { site, name, state };
+    //function logAlarmChange(site, name, state) {
+      //  const entry = { site, name, state };
         // Enviar a Google Sheets
-        fetch(GOOGLE_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            body: JSON.stringify(entry)
-        });
+        //fetch(GOOGLE_URL, {
+          //  method: 'POST',
+            //mode: 'no-cors',
+            //body: JSON.stringify(entry)
+       // });
         // Actualización local inmediata
-        const localEntry = {...entry, time: new Date().toLocaleTimeString()};
-        alarmHistory[site].push(localEntry);
-        renderHistory(site);
-    }
+        //const localEntry = {...entry, time: new Date().toLocaleTimeString()};
+        //alarmHistory[site].push(localEntry);
+        //renderHistory(site);
+    //}
+
+	function logAlarmChange(site, name, state) {
+  // 1. Crear la fecha una sola vez aquí
+  const now = new Date();
+  const timestamp = Utilities.formatDateLocal(now); // Función auxiliar que crearemos abajo
+
+  const entry = { 
+    time: timestamp, 
+    name: name, 
+    state: state, 
+    site: site 
+  };
+
+  // 2. Actualizar visualmente de inmediato para que el usuario no espere
+  // Buscamos si ya existe el array, si no lo creamos
+  if (!alarmHistory[site]) alarmHistory[site] = [];
+  
+  alarmHistory[site].push(entry);
+  renderHistory(site);
+
+  // 3. Enviar a Google incluyendo la hora que acabamos de generar
+  fetch(GOOGLE_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    body: JSON.stringify(entry) 
+  });
+}
+
+// Función auxiliar para que la hora local siempre tenga el mismo formato
+function Utilities.formatDateLocal(date) {
+    const pad = (n) => n.toString().padStart(2, '0');
+    return `${pad(date.getDate())}/${pad(date.getMonth()+1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+}
 
     // === ACTUALIZACIÓN DE ALARMAS Y FIGURAS ===
     let previousAlarmStates = { 'alarms-external-OTY': null, 'alarms-external-ITR': null };
