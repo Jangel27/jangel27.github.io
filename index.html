@@ -936,6 +936,26 @@ function Utilities.formatDateLocal(date) {
     return `${pad(date.getDate())}/${pad(date.getMonth()+1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
 }
 
+	// Mapas de figuras
+    const figureMapOTY = { 
+	0: "poste_OTY", 
+	1: "generador_OTY", 
+	2: "breaker_OTY",
+	3: "rectificador_OTY", 
+	4: "termometro_OTY", 
+	5: "bateria_OTY", 
+	8: "persona_OTY", 
+	9: "barra-tierra_OTY" };
+    const figureMapITR = { 
+	0: "poste_ITR", 
+	1: "generador_ITR", 
+	2: "breaker_ITR", 
+	3: "rectificador_ITR", 
+	4: "termometro_ITR", 
+	5: "bateria_ITR", 
+	8: "persona_ITR", 
+	9: "barra-tierra_ITR" };
+
     // === ACTUALIZACIÓN DE ALARMAS Y FIGURAS ===
     let previousAlarmStates = { 'alarms-external-OTY': null, 'alarms-external-ITR': null };
 
@@ -976,10 +996,6 @@ function Utilities.formatDateLocal(date) {
         previousAlarmStates[containerId] = current;
         toggleAlarmTab(site === 'OTY' ? 0 : 1, hasActiveAlarm);
     }
-
-    // Mapas de figuras (los que ya tenías)
-    const figureMapOTY = { 0: "poste_OTY", 1: "generador_OTY", 2: "breaker_OTY", 3: "rectificador_OTY", 4: "termometro_OTY", 5: "bateria_OTY", 8: "persona_OTY", 9: "barra-tierra_OTY" };
-    const figureMapITR = { 0: "poste_ITR", 1: "generador_ITR", 2: "breaker_ITR", 3: "rectificador_ITR", 4: "termometro_ITR", 5: "bateria_ITR", 8: "persona_ITR", 9: "barra-tierra_ITR" };
 
     function showTab(index) {
         document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === index));
