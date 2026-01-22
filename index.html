@@ -806,35 +806,69 @@
     }
 });
 	  
-	function updateDieselLevel(porcentaje) {
-      const fill = document.getElementById('diesel-fill');
-      const text = document.getElementById('diesel-text');
-		if (!fill || !text) {
-    	console.error("No se encontraron los elementos del tanque de diesel en el HTML");
-    	return;
-  		}
-      const nivel = Math.max(0, Math.min(100, porcentaje));
-      fill.style.height = `${nivel}%`;
+	//function updateDieselLevel(porcentaje) {
+    //  const fill = document.getElementById('diesel-fill');
+    //  const text = document.getElementById('diesel-text');
+	//	if (!fill || !text) {
+    //	console.error("No se encontraron los elementos del tanque de diesel en el HTML");
+    //	return;
+  	//	}
+   //   const nivel = Math.max(0, Math.min(100, porcentaje));
+   //   fill.style.height = `${nivel}%`;
 
-      if (nivel < 20) {
-        fill.style.background = 'linear-gradient(to top, #800000, #ff0000)';
-      } else if (nivel < 50) {
-        fill.style.background = 'linear-gradient(to top, #e6b800, #ffff00)';
-      } else {
-        fill.style.background = 'linear-gradient(to top, #007b00, #00ff00)';
-      }
+   //   if (nivel < 20) {
+   //     fill.style.background = 'linear-gradient(to top, #800000, #ff0000)';
+   //   } else if (nivel < 50) {
+   //     fill.style.background = 'linear-gradient(to top, #e6b800, #ffff00)';
+   //   } else {
+   //     fill.style.background = 'linear-gradient(to top, #007b00, #00ff00)';
+   //   }
 /////////////////////////////////////////////////////////////////////////
-		let dieselAlarmSent = false;
+	//	let dieselAlarmSent = false;
 		// manda alarma al bajar del 15%
-		if (nivel < 15 && !dieselAlarmSent) {
-    	logAlarmChange('ITR', 'NIVEL DIESEL CRÍTICO', `Bajo nivel: ${nivel}%`);
-    	dieselAlarmSent = true; 
-		} else if (nivel >= 20) {
-    	dieselAlarmSent = false; // Resetear cuando se llene el tanque
-		}
+	//	if (nivel < 15 && !dieselAlarmSent) {
+   // 	logAlarmChange('ITR', 'NIVEL DIESEL CRÍTICO', `Bajo nivel: ${nivel}%`);
+   // 	dieselAlarmSent = true; 
+	//	} else if (nivel >= 20) {
+    //	dieselAlarmSent = false; // Resetear cuando se llene el tanque
+	//	}
 //////////////////////////////////////////////////////////////////////		
-      text.textContent = `${nivel}%`;
-    }
+    //  text.textContent = `${nivel}%`;
+   // }
+
+let dieselCriticalSent = false; 
+
+function updateDieselLevel(porcentaje) {
+  const fill = document.getElementById('diesel-fill');
+  const text = document.getElementById('diesel-text');
+  if (!fill || !text) return;
+
+  const nivel = Math.max(0, Math.min(100, porcentaje));
+  fill.style.height = `${nivel}%`;
+
+  // --- LÓGICA DE COLORES ---
+  if (nivel < 20) {
+    fill.style.background = 'linear-gradient(to top, #800000, #ff0000)';
+  } else if (nivel < 50) {
+    fill.style.background = 'linear-gradient(to top, #e6b800, #ffff00)';
+  } else {
+    fill.style.background = 'linear-gradient(to top, #007b00, #00ff00)';
+  }
+  text.textContent = `${nivel}%`;
+
+  // --- LÓGICA DE ALARMA PARA HISTORIAL ---
+  // Si el nivel baja de 15 y no hemos enviado la alarma aún...
+  if (nivel <= 15 && !dieselCriticalSent) {
+    logAlarmChange('ITR', 'NIVEL DIESEL CRÍTICO', `Bajo nivel detectado: ${nivel}%`);
+    dieselCriticalSent = true; // Bloqueamos para que no se envíe otra vez hasta que suba
+    console.log("Alarma de diesel enviada a Google");
+  } 
+  // Si el nivel sube a más de 20 (por ejemplo, rellenaron el tanque), reseteamos el seguro
+  else if (nivel > 20 && dieselCriticalSent) {
+    logAlarmChange('ITR', 'NIVEL DIESEL RESTABLECIDO', `Tanque recuperado: ${nivel}%`);
+    dieselCriticalSent = false;
+  }
+}	  
 	  
     // === LÓGICA DE HISTORIAL GLOBAL ===
     function createHistoryContainers() {
