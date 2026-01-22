@@ -7,66 +7,746 @@
   <style>
     /* ... Mantenemos todos tus estilos originales ... */
     body {
-        background: linear-gradient(135deg, #bdc3c7 0%, #eff2f3 25%, #95a5a6 50%, #eff2f3 75%, #bdc3c7 100%) fixed !important; 
-        font-family: Arial, sans-serif; margin: 0; padding: 20px; min-height: 100vh;
+/* Degradado plata metálico */
+    background: linear-gradient(
+        135deg, 
+        #bdc3c7 0%, 
+        #eff2f3 25%, 
+        #95a5a6 50%, 
+        #eff2f3 75%, 
+        #bdc3c7 100%
+    ) fixed !important; 
+    
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    min-height: 100vh; /* Asegura que el fondo cubra toda la pantalla */
     }
-    .tabs { display: flex; cursor: pointer; margin-bottom: 10px; }
-    .tab { padding: 10px 20px; border: 1px solid #000; border-bottom: none; background-color: #f1f1f1; }
-    .tab.active { background-color: white; font-weight: bold; }
-    .tab.alarm-active-tab { background-color: red !important; color: white; }
-    .tab-content { display: none; border: 1px solid #ccc; padding: 10px; background-color: #00C3C3 !important; }
-    .tab-content.active { display: block; }
-    .alarms-house-layout { display: flex; justify-content: flex-start; align-items: flex-start; gap: 120px; width: 100%; }
-    .alarms-container { flex: 0 0 auto; width: 280px; }
-    .alarm { border: 1px solid #ccc; border-radius: 5px; padding: 10px; margin: 10px 0; font-size: 12px; width: 280px; }
-    .active { background-color: #ffe5e5; color: #b30000; font-weight: bold; }
-    .inactive { background-color: #e5ffe5; color: #007000; }
-    .history-box { background: #fff; border: 1px solid #ccc; padding: 10px; max-height: 250px; overflow-y: auto; list-style: none; }
-    .sync-status { font-size: 11px; color: #555; margin-bottom: 5px; font-style: italic; }
-    /* ... Tus estilos de casa y animaciones se mantienen igual ... */
-    .house-drawing { position: relative; width: 540px; height: 620px; top: -70px; left: -50px; }
-    .alarm-figure-active svg * { stroke: red !important; fill: red !important; }
-    @keyframes parpadeo { 0% { opacity: 1; } 50% { opacity: 0.1; } 100% { opacity: 1; } }
-    .alarm-blink { animation: parpadeo 2s infinite; }
-    /* Estilos de las figuras abreviados para brevedad del prompt pero incluidos en la lógica */
-    .roof, .walls, .sala-baterias, .planta-CD, .bateria, .persona, .termometro, .barra-tierra, .rectificador, .breaker, .external-figures, .tank-area, .generador, .ats, .flecha1, .flecha2, .flecha3, .flecha4, .poste { position: absolute; }
+
+    .tabs {
+      display: flex;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+
+    .tab {
+      padding: 10px 20px;
+      border: 1px solid #000;
+      border-bottom: none;
+      background-color: #f1f1f1;  /* Color gris de pestaña*/
+    }
+
+    .tab.active {
+      background-color: white;
+      font-weight: bold;
+    }
+
+    .tab.alarm-active-tab {
+      background-color: red !important;
+      color: white;
+    }
+
+    .tab-content {
+      display: none;
+      border: 1px solid #ccc;
+      padding: 10px;
+      background-color: #00C3C3 !important;  /* Color verde de fondo de pestaña*/
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .alarms-house-layout {
+    	display: flex;
+      	justify-content: flex-start;
+      	align-items: flex-start;
+		/*Espacio Fijo entre alarmas y dibujo*/
+      	gap: 120px;
+		/* Centramos todo el conjunto en la pantalla por si sobra espacio a los lados */
+		margin: 0;
+		width: 100%;
+    }
+
+    .alarms-container {
+    	flex: 0 0 auto; 
+  		width: 280px;
+    }
+
+    .alarm {
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 12px;
+      width: 280px;
+    }
+
+    .active {
+      background-color: #ffe5e5;
+      color: #b30000;
+      font-weight: bold;
+    }
+
+    .inactive {
+      background-color: #e5ffe5;
+      color: #007000;
+    }
+
+    .byte-info {
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    /* ====== Área de la casa ====== */
+    .house-area {
+    	display: flex;
+      	flex-direction: column;
+      	align-items: center;
+      	margin-top: 20px;
+		/* Permitimos que la casa mantenga su lugar */
+  		flex: 0 0 auto;
+    }
+
+    .house-drawing {
+      position: relative;
+      width: 540px;
+      height: 620px;
+      top: -70px;
+      left: -50px;
+    }
+
+    .roof {
+      position: absolute;
+      top: -60px;
+      left: 0;
+      width: 0;
+      height: 0;
+      border-left: 270px solid transparent;
+      border-right: 270px solid transparent;
+      border-bottom: 200px solid transparent;
+    }
+
+    .roof::before,
+    .roof::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      width: 2px;
+      height: 320px;
+      background-color: #000;
+    }
+
+    .roof::before {
+      left: -270px;
+      transform: rotate(57deg);
+      transform-origin: bottom right;
+    }
+
+    .roof::after {
+      right: -270px;
+      transform: rotate(-57deg);
+      transform-origin: bottom left;
+    }
+
+    .roof .base-line {
+      position: absolute;
+      bottom: 0;
+      left: -270px;
+      width: 540px;
+      height: 2px;
+      background-color: #000;
+    }
+
+    .walls {
+      position: absolute;
+      bottom: 0;
+      width: 540px;
+      height: 360px;
+      background-color: transparent;
+      border: 2px solid #000000;
+      box-sizing: border-box;
+    }
+
+    .sala-baterias {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 180px;
+      height: 220px;
+      background-color: transparent;
+      border: 2px solid #000000;
+      box-sizing: border-box;
+    }
+	#sala-baterias-title {
+	  	position: absolute;
+	  	top: -25px;
+	  	left: 45%;
+		width: 100%;      /* Ocupa todo el ancho del cuadro padre */
+  		transform: translateX(-20%);
+	  font-size: 14px;
+	  font-weight: bold;
+	  color: #333;
+	  text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+	  pointer-events: none;
+	}
+
+    .planta-CD {
+      position: absolute;
+      bottom: 0;
+      left: 360px;
+      width: 180px;
+      height: 220px;
+      background-color: transparent;
+      border: 2px solid #000000;
+      box-sizing: border-box;
+    }
+	#planta-CD-title {
+	  position: absolute;
+	  top: -25px;
+	  left: 45%;
+	  width: 100%;      /* Ocupa todo el ancho del cuadro padre */
+  	  transform: translateX(-20%);
+	  font-size: 14px;
+	  font-weight: bold;
+	  color: #333;
+	  text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+	  pointer-events: none;
+	}
+    .bateria{
+    	position: absolute;
+      	bottom: 0%;	/* Posicionamiento a 0% de la parte inferior */
+      	left: 0%;		/* Posicionamiento a 0% de la izquierda */
+		transform: translate(40px, 50px); /* Ajuste fino para mantener el diseño original (45px left, -50px bottom = 50px up) */
+    }
+    .persona{
+		position: absolute;
+      	bottom: 0%;
+      	left: 0%;
+      	transform: translate(25px, -15px); /* Ajuste fino */
+    }
+    .termometro{
+		position: absolute;
+      	top: 40%; /* ~220px desde abajo (620px * 0.35 = 217) */
+      	left: 46%; /* ~250px desde la izquierda */
+		transform: scale(.75);
+    }
+    .barra-tierra{
+		position: absolute;
+      	top: 47%; 
+      	right: 0%; 
+		transform: translateX(25px) scale(0.70);
+    }
+    .rectificador{
+		position: absolute;
+      	bottom: 2%; 
+      	right: 2%;
+      	transform: scale(0.8); /* translateX(-5px); Ajuste fino */
+    }
+    .breaker{
+		position: absolute;
+      	top: 70%; /* ~120px desde abajo (620 - 120 = 500; 500/620 ~ 80%) */
+      	right: 0%; /* ~395px desde la izquierda (540-395=145; 145/540 ~ 27%) */
+      	transform: translateX(-50px) scale(1.2); /* Ajuste fino */
+    }
+	/* === Contenedor de figuras EXTERNAS === */
+	.external-figures {
+		position: relative;
+  	  	width: 100%;
+  	  	height: 150px;           /* Reducido para mejor visualización */
+	  	margin-top: 20px;
+	}
+	/* === Figuras FUERA de la casa (posicionadas por % en relación a .external-figures) === */  
+  	.tank-area {
+		position: absolute;
+  	  	bottom: 70%; /* Centro vertical */
+  	  	left: 0%;
+		transform: translateX(-100px) scale(0.8);
+	}
+
+	#diesel-tank {
+	position: absolute;
+  	width: 155px;
+  	height: 75px;
+  	border: 4px solid #555;
+  	border-radius: 60px;
+  	background: radial-gradient(circle at 50% 30%, #fff176 0%, #FAD201 60%, #c9a801 100%);
+  	box-shadow: inset -6px 0 10px rgba(0,0,0,0.3), inset 6px 0 10px rgba(255,255,255,0.5);
+  	overflow: hidden;
+  	position: relative;
+	}
+
+    #diesel-fill {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 0%;
+      background: linear-gradient(to top, #007b00, #00ff00);
+      border-radius: 0 0 40px 40px;
+      transition: height 0.8s ease, background 0.6s ease;
+      box-shadow: inset 0 2px 5px rgba(255, 255, 255, 0.5);
+    }
+
+    #diesel-text {
+      position: absolute;
+      width: 100%;
+      text-align: center;
+      bottom: 10px;
+      font-weight: bold;
+      color: #000;
+      font-size: 20px;
+      text-shadow: 1px 1px 2px rgba(255,255,255,0.9);
+    }
+
+	#diesel-title {
+	  position: absolute;
+	  top: -20px; /* justo encima del tanque */
+	  left: 45%;
+	  width: 100%;      /* Ocupa todo el ancho del cuadro padre */
+  	  transform: translateX(-20%);
+	  font-size: 14px;
+	  font-weight: bold;
+	  color: #333;
+	  text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+	  pointer-events: none;
+	}
+
+    .generador{
+		position: absolute;
+      	bottom: 40%; 
+      	left: 13%;
+		transform: scale(0.8);
+    }
+    /* Solo líneas, sin relleno */
+    .gen-body, .gen-base {
+        fill: none;
+        stroke: black;
+        stroke-width: 2;
+    }
+    .button {
+        margin: 10px;
+        padding: 8px 12px;
+        cursor: pointer;
+    }
+    .ats{
+		position: absolute;
+      	bottom: 45%;
+      	right: 20%;
+		transform: scale(0.8);
+    }
+    .flecha1{
+		position: absolute;
+      	bottom: 70%;
+      	left: 35%;
+		transform: scale(0.4);
+    }
+      .flecha2{
+		position: absolute;
+      	bottom: 70%;
+      	right: 5%;
+		transform: translateX(10px) scale(0.4);
+    }
+      .flecha3{
+		position: absolute;
+      	bottom: 80%;
+      	right: 10%;
+      	transform: translateY(-5px) scale(0.4) rotate(-90deg); /* Se gira para apuntar arriba */
+    }
+    .flecha4{
+		position: absolute;
+      	bottom: 67%;
+      	left: 1%;
+		transform: scale(0.35);
+    }
+    .poste{
+		position: absolute;
+      	bottom: 35%;
+      	right: 0%;
+		transform: traslateX(25%);
+    }
+    .history-box {
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 10px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .clear-btn {
+      margin: 5px 0;
+      padding: 5px 10px;
+      background: #ff6666;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .clear-btn:hover {
+      background: #e60000;
+    }
+    /* Color rojo a la figura */
+	.alarm-figure-active svg * {
+  	stroke: red !important;
+  	fill: red !important;
+		}
+
+	/* Parpadeo cada 2 segundos */
+	@keyframes parpadeo {
+  	0%   { opacity: 1; }
+  	50%  { opacity: 0.1; }
+  	100% { opacity: 1; }
+		}
+
+	.alarm-blink {
+  	animation: parpadeo 2s infinite;
+	}
+
   </style>
 </head>
+	
 <body>
-  <h2>Estado de Alarmas (Sincronización Global Google Sheets)</h2>
+  <h2>Estado de Alarmas (desde ESP32 vía EMQX)</h2>
 
   <div class="tabs">
     <div class="tab active" onclick="showTab(0)">Alarmas Externas OTY</div>
     <div class="tab" onclick="showTab(1)">Alarmas Externas ITR</div>
   </div>
 
+  <!-- TAB 0: OTY -->
   <div id="tab-0" class="tab-content active">
     <div class="byte-info" id="byte-external-OTY">Esperando datos de OTY...</div>
     <div class="alarms-house-layout">
-        <div class="alarms-container" id="alarms-external-OTY"></div>
-        <div class="house-area">
-            <div class="house-drawing">
-                <div class="roof"></div><div class="walls"></div>
-                <div class="sala-baterias"><div id="sala-baterias-title">Sala de Baterias</div></div>
-                <div id="bateria_OTY" class="bateria"><svg width="100" height="140" viewBox="0 0 60 120"><rect x="0" y="20" width="60" height="50" rx="5" ry="5" fill="none" stroke="black" stroke-width="2"></rect></svg></div>
-                </div>
-        </div>
-    </div>
-  </div>
+    	<div class="alarms-container" id="alarms-external-OTY"></div>
+      	<div class="house-area">
+        	<div class="house-drawing">
+          	<div class="roof"></div>
+          	<div class="walls"></div>
+	        	<div class="sala-baterias">
+				<div id="sala-baterias-title">Sala de Baterias</div>
+				</div>
+	          	<div class="planta-CD">
+				<div id="planta-CD-title">Planta de CD</div>
+				</div>
+				<!-- Figuras dentro de la casa -->
+	          	<div id="bateria_OTY" class="bateria">
+	          	<svg width="100" height="140" viewBox="0 0 60 120">
+	          	<rect x="0" y="20" width="60" height="50" rx="5" ry="5" fill="none" stroke="black" stroke-width="2"></rect>
+	          	<line x1="15" y1="20" x2="15" y2="70" stroke="black" stroke-width="1"></line>
+	          	<line x1="30" y1="20" x2="30" y2="70" stroke="black" stroke-width="1"></line>
+	          	<line x1="45" y1="20" x2="45" y2="70" stroke="black" stroke-width="1"></line>
+	          	<rect x="8" y="10" width="15" height="10" fill="red"></rect>
+	          	<text x="15.5" y="18" font-size="10" text-anchor="middle" fill="white" font-family="Arial" font-weight="bold">+</text>
+	          	<rect x="13" y="5" width="5" height="5" fill="red"></rect>
+	          	<rect x="38" y="10" width="15" height="10" fill="black"></rect>
+	          	<text x="45.5" y="18" font-size="10" text-anchor="middle" fill="white" font-family="Arial" font-weight="bold">-</text>
+	          	<rect x="43" y="5" width="5" height="5" fill="black"></rect>
+	          	</svg>
+	          	</div>
+	          	<div id="persona_OTY" class="persona">
+	          	<svg width="150" height="220" viewBox="0 0 120 180">
+	          	<circle cx="52.5" cy="34" r="8" fill="none" stroke="black" stroke-width="3"/>
+	          	<rect x="45" y="45" width="15" height="30" fill="none" stroke="black" stroke-width="3" rx="3"/>
+	          	<rect x="40" y="45" width="5" height="25" fill="none" stroke="black" stroke-width="3" rx="3"/>
+	          	<rect x="60" y="45" width="5" height="25" fill="none" stroke="black" stroke-width="3" rx="3" />
+	          	<rect x="47.5" y="75" width="5" height="28" fill="none" stroke="black" stroke-width="3" rx="3"/>
+	          	<rect x="52.5" y="75" width="5" height="28" fill="none" stroke="black" stroke-width="3" rx="3"/>
+	          	</svg>
+	          	</div>
+	          	<div id="termometro_OTY" class="termometro">
+	          	<svg width="45" height="154" viewBox="0 0 30 100">
+	          	<circle cx="15" cy="90" r="10" fill="gray" stroke="black" stroke-width="2"></circle>
+	          	<rect x="12" y="32" width="6" height="50" fill="none" stroke="black" stroke-width="2" rx="3"></rect>
+	          	<rect x="13" y="60" width="4" height="30" fill="gray"></rect>
+	          	<line x1="18" y1="40" x2="22" y2="40" stroke="black" stroke-width="1"></line>
+	          	<line x1="18" y1="50" x2="22" y2="50" stroke="black" stroke-width="1"></line>
+	          	<line x1="18" y1="60" x2="22" y2="60" stroke="black" stroke-width="1"></line>
+	          	<line x1="18" y1="70" x2="22" y2="70" stroke="black" stroke-width="1"></line>
+	          	</svg>
+	          	</div>
+	          	<div id="barra-tierra_OTY" class="barra-tierra">
+	          	<svg width="160" height="80" viewBox="0 0 160 80" xmlns="http://www.w3.org/2000/svg">
+	          	<rect x="5" y="5" width="150" height="70" fill="none" stroke="black" stroke-width="2" rx="5" ry="5" />
+	          	<line x1="80" y1="20" x2="80" y2="45" stroke="black" stroke-width="4" />
+	          	<line x1="55" y1="45" x2="105" y2="45" stroke="black" stroke-width="4" />
+	          	<line x1="60" y1="55" x2="100" y2="55" stroke="black" stroke-width="4" />
+	          	<line x1="65" y1="65" x2="95"  y2="65" stroke="black" stroke-width="4" />
+	          	</svg>
+	          	</div>
+	          	<div id="rectificador_OTY" class="rectificador">
+	          	<svg width="175" height="75" viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
+	           	<line x1="0" y1="30" x2="40" y2="30" stroke="black" stroke-width="3"/>
+	          	<line x1="0" y1="70" x2="40" y2="70" stroke="black" stroke-width="3"/>
+	          	<rect x="40" y="10" width="120" height="80" fill="none" stroke="black" stroke-width="3"/>
+	          	<line x1="40" y1="10" x2="160" y2="90" stroke="black" stroke-width="1"/>
+		        <path d="M 50 60 q 10 -40 20 0 q 10 40 20 0" fill="none" stroke="black" stroke-width="3" />
+	          	<line x1="130" y1="35" x2="150" y2="35" stroke="black" stroke-width="5" />
+	          	<line x1="130" y1="45" x2="150" y2="45" stroke="black" stroke-width="3" />
+	          	<line x1="160" y1="30" x2="200" y2="30" stroke="black" stroke-width="3" />
+	          	<line x1="160" y1="70" x2="200" y2="70" stroke="black" stroke-width="3" />
+	          	<text x="205" y="35" font-family="Arial" font-size="20" fill="black">+</text>
+	          	<text x="205" y="75" font-family="Arial" font-size="20" fill="black">-</text>
+	          	</svg>
+	          	</div>
+	          	<div id="breaker_OTY" class="breaker">
+	          	<svg width="90" height="60" viewBox="0 0 160 120" stroke="black" stroke-width="3" fill="none" stroke-linejoin="round">
+	           	<rect x="10" y="20" width="40" height="80" rx="2" ry="2"></rect>
+	          	<rect x="60" y="20" width="40" height="80" rx="2" ry="2"></rect>
+	          	<rect x="110" y="20" width="40" height="80" rx="2" ry="2"></rect>
+	          	<rect x="18" y="10" width="20" height="10" rx="1" ry="1"></rect>
+	          	<rect x="68" y="10" width="20" height="10" rx="1" ry="1"></rect>
+	          	<rect x="118" y="10" width="20" height="10" rx="1" ry="1"></rect>
+	          	<circle cx="28" cy="15" r="4"></circle>
+	          	<circle cx="78" cy="15" r="4"></circle>
+	          	<circle cx="128" cy="15" r="4"></circle>
+	          	<rect x="18" y="100" width="20" height="10" rx="1" ry="1"></rect>
+	          	<rect x="68" y="100" width="20" height="10" rx="1" ry="1"></rect>
+	          	<rect x="118" y="100" width="20" height="10" rx="1" ry="1"></rect>
+	          	<circle cx="28" cy="105" r="4"></circle>
+	          	<circle cx="78" cy="105" r="4"></circle>
+	          	<circle cx="128" cy="105" r="4"></circle>
+	          	<rect x="25" y="50" width="10" height="25" rx="1" ry="1" fill="white" stroke="black" stroke-width="3"></rect>
+	          	<line x1="30" y1="50" x2="30" y2="60" stroke="black" stroke-width="3" stroke-linecap="round"></line>
+	          	<rect x="75" y="50" width="10" height="25" rx="1" ry="1" fill="white" stroke="black" stroke-width="3"></rect>
+	          	<line x1="80" y1="50" x2="80" y2="60" stroke="black" stroke-width="3" stroke-linecap="round"></line>
+	          	<rect x="125" y="50" width="10" height="25" rx="1" ry="1" fill="white" stroke="black" stroke-width="3"></rect>
+	          	<line x1="130" y1="50" x2="130" y2="60" stroke="black" stroke-width="3" stroke-linecap="round"></line>
+	          	</svg>
+	          	</div>
+			</div>
+			<div class="external-figures">
+	            <div id="generador_OTY" class="generador">
+	            <svg width="200" height="150" viewBox="0 0 200 150">
+	        	<rect class="gen-base" x="20" y="100" width="160" height="20" rx="4"></rect>
+	        	<rect class="gen-body" x="40" y="40" width="120" height="60" rx="8"></rect>
+	            <text x="65" y="95" font-size="28" text-anchor="middle" fill="black" font-family="Arial" font-weight="bold">GE</text>
+		        <polyline points="100,45 90,70 110,70 100,95" stroke="orange" stroke-width="3" fill="none"></polyline>
+		        <circle cx="60" cy="60" r="5" fill="red"></circle>
+		        <circle cx="140" cy="60" r="5" fill="green"></circle>
+	            </svg>
+		    	</div>
+	            <div id="ats_OTY" class="ats">
+		        <svg width="150" height="120" viewBox="0 0 150 120">  
+		        <rect x="10" y="20" width="130" height="80" rx="10" fill="none" stroke="black" stroke-width="2"></rect>
+		        <text x="35" y="50" font-size="22" text-anchor="middle" fill="black" font-family="Arial" font-weight="bold">ATS</text>
+			    <line x1="75" y1="70" x2="75" y2="25" stroke="black" stroke-width="4" stroke-linecap="round"></line>
+		        <circle cx="75" cy="70" r="6" fill="gray" stroke="black" stroke-width="2"></circle>
+		        <text x="30" y="85" font-size="14" text-anchor="middle" fill="red" font-family="Arial" font-weight="bold">GEN</text>
+		        <text x="120" y="85" font-size="14" text-anchor="middle" fill="green" font-family="Arial" font-weight="bold">CFE</text>
+		        <line x1="75" y1="70" x2="25" y2="70" stroke="red" stroke-width="3"></line>
+		        <line x1="75" y1="70" x2="125" y2="70" stroke="green" stroke-width="3"></line>
+		        </svg>
+		        </div> 
+	            <div id="flecha1_OTY" class="flecha1">
+		        <svg width="150" height="50">
+		        <polygon points="20,15 95,15 95,5 135,25 95,45 95,35 20,35" fill="orange" stroke="black" stroke-width="3"/>
+		        </svg>
+		        </div>
+		        <div id="flecha2_OTY" class="flecha2">
+		        <svg width="150" height="50">
+		        <polygon points="130,15 50,15 50,5 10,25 50,45 50,35 130,35" fill="orange" stroke="black" stroke-width="3"/>
+		        </svg>
+	            </div>
+	            <div id="flecha3_OTY" class="flecha3">
+	            <svg width="150" height="150">
+	            <polygon points="20,15 95,15 95,5 135,25 95,45 95,35 20,35" fill="orange" stroke="black" stroke-width="3"/>
+	         	</svg>
+	            </div>
+	            <div id="flecha4_OTY" class="flecha4">
+	            <svg width="150" height="50">
+	            <polygon points="20,15 95,15 95,5 135,25 95,45 95,35 20,35" fill="orange" stroke="black" stroke-width="3"/>
+	            </svg>
+	            </div>
+	            <div id="poste_OTY" class="poste">
+	            <svg width="100" height="200" viewBox="0 0 50 150">
+	            <rect x="22" y="30" width="6" height="100" fill="saddlebrown"></rect>
+	         	<rect x="10" y="30" width="30" height="4" fill="sienna"></rect>
+	            <line x1="10" y1="32" x2="0" y2="20" stroke="black" stroke-width="2"></line>
+	            <line x1="40" y1="32" x2="50" y2="20" stroke="black" stroke-width="2"></line>
+	            <line x1="10" y1="34" x2="0" y2="40" stroke="black" stroke-width="2"></line>
+	            <line x1="40" y1="34" x2="50" y2="40" stroke="black" stroke-width="2"></line>
+	            <rect x="20" y="130" width="10" height="10" fill="gray"></rect>
+	            </svg>
+	            </div>
+        	</div>
+    	</div>
+	</div>
+</div>	  
 
-  <div id="tab-1" class="tab-content">
-    <div class="byte-info" id="byte-external-ITR">Esperando datos de ITR...</div>
+<!-- TAB 1: ITR -->
+<div id="tab-1" class="tab-content">
+	<div class="byte-info" id="byte-external-ITR">Esperando datos de ITR...</div>
     <div class="alarms-house-layout">
-        <div class="alarms-container" id="alarms-external-ITR"></div>
-        <div class="house-area">
-            <div class="house-drawing">
-                <div class="roof"></div><div class="walls"></div>
-                </div>
+		<!-- Contenedor de alarmas -->
+      	<div class="alarms-container" id="alarms-external-ITR"></div>
+		<!-- Área de la casa -->	
+      	<div class="house-area">
+        	<div class="house-drawing">
+          	<div class="roof"></div>
+          	<div class="walls"></div>
+	        	<div class="sala-baterias">
+				<div id="sala-baterias-title">Sala de Baterias</div>
+				</div>
+	          	<div class="planta-CD">
+				<div id="planta-CD-title">Planta de CD</div>
+				</div>
+			<!-- Figuras dentro de la casa -->
+       	 	<div id="bateria_ITR" class="bateria">
+          		<svg width="100" height="140" viewBox="0 0 60 120">
+		        <rect x="0" y="20" width="60" height="50" rx="5" ry="5" fill="none" stroke="black" stroke-width="2"></rect>
+		        <line x1="15" y1="20" x2="15" y2="70" stroke="black" stroke-width="1"></line>
+		        <line x1="30" y1="20" x2="30" y2="70" stroke="black" stroke-width="1"></line>
+		        <line x1="45" y1="20" x2="45" y2="70" stroke="black" stroke-width="1"></line>
+		        <rect x="8" y="10" width="15" height="10" fill="red"></rect>
+		        <text x="15.5" y="18" font-size="10" text-anchor="middle" fill="white" font-family="Arial" font-weight="bold">+</text>
+		        <rect x="13" y="5" width="5" height="5" fill="red"></rect>
+		        <rect x="38" y="10" width="15" height="10" fill="black"></rect>
+		        <text x="45.5" y="18" font-size="10" text-anchor="middle" fill="white" font-family="Arial" font-weight="bold">-</text>
+		        <rect x="43" y="5" width="5" height="5" fill="black"></rect>
+		        </svg>
+		    </div>
+	        <div id="termometro_ITR" class="termometro">
+	          	<svg width="45" height="154" viewBox="0 0 30 100">
+	          	<circle cx="15" cy="90" r="10" fill="gray" stroke="black" stroke-width="2"></circle>
+	          	<rect x="12" y="32" width="6" height="50" fill="none" stroke="black" stroke-width="2" rx="3"></rect>
+	          	<rect x="13" y="60" width="4" height="30" fill="gray"></rect>
+	          	<line x1="18" y1="40" x2="22" y2="40" stroke="black" stroke-width="1"></line>
+	          	<line x1="18" y1="50" x2="22" y2="50" stroke="black" stroke-width="1"></line>
+	          	<line x1="18" y1="60" x2="22" y2="60" stroke="black" stroke-width="1"></line>
+	          	<line x1="18" y1="70" x2="22" y2="70" stroke="black" stroke-width="1"></line>
+	          	</svg>
+	        </div>
+          	<div id="barra-tierra_ITR" class="barra-tierra">
+          		<svg width="160" height="80" viewBox="0 0 160 80" xmlns="http://www.w3.org/2000/svg">
+          		<rect x="5" y="5" width="150" height="70" fill="none" stroke="black" stroke-width="2" rx="5" ry="5" />
+          		<line x1="80" y1="20" x2="80" y2="45" stroke="black" stroke-width="4" />
+          		<line x1="55" y1="45" x2="105" y2="45" stroke="black" stroke-width="4" />
+          		<line x1="60" y1="55" x2="100" y2="55" stroke="black" stroke-width="4" />
+          		<line x1="65" y1="65" x2="95"  y2="65" stroke="black" stroke-width="4" />
+          		</svg>
+          	</div>
+          	<div id="rectificador_ITR" class="rectificador">
+          		<svg width="175" height="75" viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
+          		<line x1="0" y1="30" x2="40" y2="30" stroke="black" stroke-width="3"/>
+          		<line x1="0" y1="70" x2="40" y2="70" stroke="black" stroke-width="3"/>
+          		<rect x="40" y="10" width="120" height="80" fill="none" stroke="black" stroke-width="3"/>
+          		<line x1="40" y1="10" x2="160" y2="90" stroke="black" stroke-width="1"/>
+          		<path d="M 50 60 q 10 -40 20 0 q 10 40 20 0" fill="none" stroke="black" stroke-width="3" />
+          		<line x1="130" y1="35" x2="150" y2="35" stroke="black" stroke-width="5" />
+          		<line x1="130" y1="45" x2="150" y2="45" stroke="black" stroke-width="3" />
+          		<line x1="160" y1="30" x2="200" y2="30" stroke="black" stroke-width="3" />
+          		<line x1="160" y1="70" x2="200" y2="70" stroke="black" stroke-width="3" />
+          		<text x="205" y="35" font-family="Arial" font-size="20" fill="black">+</text>
+          		<text x="205" y="75" font-family="Arial" font-size="20" fill="black">-</text>
+          		</svg>
+          	</div>
+	        <div id="breaker_ITR" class="breaker">
+	          	<svg width="90" height="60" viewBox="0 0 160 120" stroke="black" stroke-width="3" fill="none" stroke-linejoin="round">
+	          	<rect x="10" y="20" width="40" height="80" rx="2" ry="2"></rect>
+	          	<rect x="60" y="20" width="40" height="80" rx="2" ry="2"></rect>
+	          	<rect x="110" y="20" width="40" height="80" rx="2" ry="2"></rect>
+	          	<rect x="18" y="10" width="20" height="10" rx="1" ry="1"></rect>
+	          	<rect x="68" y="10" width="20" height="10" rx="1" ry="1"></rect>
+	          	<rect x="118" y="10" width="20" height="10" rx="1" ry="1"></rect>
+	          	<circle cx="28" cy="15" r="4"></circle>
+	          	<circle cx="78" cy="15" r="4"></circle>
+	          	<circle cx="128" cy="15" r="4"></circle>
+	          	<rect x="18" y="100" width="20" height="10" rx="1" ry="1"></rect>
+	          	<rect x="68" y="100" width="20" height="10" rx="1" ry="1"></rect>
+	          	<rect x="118" y="100" width="20" height="10" rx="1" ry="1"></rect>
+	          	<circle cx="28" cy="105" r="4"></circle>
+	          	<circle cx="78" cy="105" r="4"></circle>
+	          	<circle cx="128" cy="105" r="4"></circle>
+	          	<rect x="25" y="50" width="10" height="25" rx="1" ry="1" fill="white" stroke="black" stroke-width="3"></rect>
+	          	<line x1="30" y1="50" x2="30" y2="60" stroke="black" stroke-width="3" stroke-linecap="round"></line>
+	          	<rect x="75" y="50" width="10" height="25" rx="1" ry="1" fill="white" stroke="black" stroke-width="3"></rect>
+	          	<line x1="80" y1="50" x2="80" y2="60" stroke="black" stroke-width="3" stroke-linecap="round"></line>
+	          	<rect x="125" y="50" width="10" height="25" rx="1" ry="1" fill="white" stroke="black" stroke-width="3"></rect>
+	          	<line x1="130" y1="50" x2="130" y2="60" stroke="black" stroke-width="3" stroke-linecap="round"></line>
+	          	</svg>
+	        </div>
+          	<div id="persona_ITR" class="persona">
+          		<svg width="150" height="220" viewBox="0 0 120 180">
+          		<circle cx="52.5" cy="34" r="8" fill="none" stroke="black" stroke-width="3"/>
+          		<rect x="45" y="45" width="15" height="30" fill="none" stroke="black" stroke-width="3" rx="3"/>
+          		<rect x="40" y="45" width="5" height="25" fill="none" stroke="black" stroke-width="3" rx="3"/>
+         		<rect x="60" y="45" width="5" height="25" fill="none" stroke="black" stroke-width="3" rx="3" />
+          		<rect x="47.5" y="75" width="5" height="28" fill="none" stroke="black" stroke-width="3" rx="3"/>
+          		<rect x="52.5" y="75" width="5" height="28" fill="none" stroke="black" stroke-width="3" rx="3"/>
+         		</svg>
+         	</div>
+		</div>
+		<!-- Contenedor para figuras externas -->
+  		<div class="external-figures">
+			<div class="tank-area">
+  				<div id="diesel-title">Nivel Diesel</div>
+  				<div id="diesel-tank">
+   					<div id="diesel-fill"></div>
+    				<div id="diesel-text">0%</div>
+  				</div>
+			</div>
+          	<div id="generador_ITR" class="generador">
+            	<svg width="200" height="150" viewBox="0 0 200 150">
+	            <rect class="gen-base" x="20" y="100" width="160" height="20" rx="4"></rect>
+	            <rect class="gen-body" x="40" y="40" width="120" height="60" rx="8"></rect>
+	            <text x="65" y="95" font-size="28" text-anchor="middle" fill="black" font-family="Arial" font-weight="bold">GE</text>
+	            <polyline points="100,45 90,70 110,70 100,95" stroke="orange" stroke-width="3" fill="none"></polyline>
+	            <circle cx="60" cy="60" r="5" fill="red"></circle>
+	            <circle cx="140" cy="60" r="5" fill="green"></circle>
+	            </svg>
+	        </div>
+            <div id="ats_ITR" class="ats">
+             	<svg width="150" height="120" viewBox="0 0 150 120">  
+	            <rect x="10" y="20" width="130" height="80" rx="10" fill="none" stroke="black" stroke-width="2"></rect>
+	        	<text x="35" y="50" font-size="22" text-anchor="middle" fill="black" font-family="Arial" font-weight="bold">ATS</text>
+	            <line x1="75" y1="70" x2="75" y2="25" stroke="black" stroke-width="4" stroke-linecap="round"></line>
+	            <circle cx="75" cy="70" r="6" fill="gray" stroke="black" stroke-width="2"></circle>
+	            <text x="30" y="85" font-size="14" text-anchor="middle" fill="red" font-family="Arial" font-weight="bold">GEN</text>
+	            <text x="120" y="85" font-size="14" text-anchor="middle" fill="green" font-family="Arial" font-weight="bold">CFE</text>
+	            <line x1="75" y1="70" x2="25" y2="70" stroke="red" stroke-width="3"></line>
+	            <line x1="75" y1="70" x2="125" y2="70" stroke="green" stroke-width="3"></line>
+	            </svg>
+	        </div> 
+            <div id="flecha1_ITR" class="flecha1">
+            	<svg width="150" height="50">
+             	<polygon points="20,15 95,15 95,5 135,25 95,45 95,35 20,35" fill="orange" stroke="black" stroke-width="3"/>
+             	</svg>
+            </div>
+            <div id="flecha2_ITR" class="flecha2">
+             	<svg width="150" height="50">
+             	<polygon points="130,15 50,15 50,5 10,25 50,45 50,35 130,35" fill="orange" stroke="black" stroke-width="3"/>
+             	</svg>
+            </div>
+            <div id="flecha3_ITR" class="flecha3">
+             	<svg width="150" height="150">
+             	<polygon points="20,15 95,15 95,5 135,25 95,45 95,35 20,35" fill="orange" stroke="black" stroke-width="3"/>
+             	</svg>
+        	</div>
+            <div id="flecha4_ITR" class="flecha4">
+             	<svg width="150" height="50">
+             	<polygon points="20,15 95,15 95,5 135,25 95,45 95,35 20,35" fill="orange" stroke="black" stroke-width="3"/>
+             	</svg>
+        	</div>
+            <div id="poste_ITR" class="poste">
+             	<svg width="100" height="200" viewBox="0 0 50 150">
+             	<rect x="22" y="30" width="6" height="100" fill="saddlebrown"></rect>
+             	<rect x="10" y="30" width="30" height="4" fill="sienna"></rect>
+             	<line x1="10" y1="32" x2="0" y2="20" stroke="black" stroke-width="2"></line>
+             	<line x1="40" y1="32" x2="50" y2="20" stroke="black" stroke-width="2"></line>
+             	<line x1="10" y1="34" x2="0" y2="40" stroke="black" stroke-width="2"></line>
+             	<line x1="40" y1="34" x2="50" y2="40" stroke="black" stroke-width="2"></line>
+             	<rect x="20" y="130" width="10" height="10" fill="gray"></rect>
+             	</svg>
+            </div>
         </div>
     </div>
-  </div>
-
+</div>
+</div>
   <script>
+
+	// Para que se actualicen los datos del broker EMQX es necesario pedir a sistemas que
+	//pongan en "Lista Blanca" (Whitelist) el dominio *.emqxsl.com para el puerto, 8084.
+	  
     // === CONFIGURACIÓN GLOBAL ===
     const GOOGLE_URL = "https://script.google.com/macros/s/AKfycbxxrDq8_PNyQWRzVUNMd6bQSotrshvtVnuC2tJEtDFk6GiAtB4uE1t3pPtZATptyVEu/exec"; 
     let alarmHistory = { 'OTY': [], 'ITR': [] };
