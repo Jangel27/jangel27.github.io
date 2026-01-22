@@ -801,7 +801,7 @@
         const porcentaje = parseInt(message.toString());
 		console.log("Actualizando Diesel a:", porcentaje);
         //if (!isNaN(porcentaje)) {
-          //  updateDieselLevel(porcentaje);
+        updateDieselLevel(porcentaje);
         //}
     }
 });
@@ -817,11 +817,11 @@
       fill.style.height = `${nivel}%`;
 
       if (nivel < 20) {
-        fill.style.background = 'linear-gradient(to top, #800000, #ff0000)';
+        fill.style.background = 'linear-gradient(to top, #800000, #ff0000)'; // Rojo
       } else if (nivel < 50) {
-        fill.style.background = 'linear-gradient(to top, #e6b800, #ffff00)';
+        fill.style.background = 'linear-gradient(to top, #e6b800, #ffff00)'; // Amarillo
       } else {
-        fill.style.background = 'linear-gradient(to top, #007b00, #00ff00)';
+        fill.style.background = 'linear-gradient(to top, #007b00, #00ff00)'; // Verde
       }
 	
       text.textContent = `${nivel}%`;
