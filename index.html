@@ -852,19 +852,42 @@ body {
         } catch (e) { console.error("Error de sincronización", e); }
     }
 
-    function renderHistory(site) {
-        const list = document.getElementById(`history-${site}`);
-        const syncLabel = document.getElementById(`sync-time-${site}`);
-        list.innerHTML = '';
+   // function renderHistory(site) {
+     //   const list = document.getElementById(`history-${site}`);
+       // const syncLabel = document.getElementById(`sync-time-${site}`);
+        //list.innerHTML = '';
         // Mostramos los últimos 50 eventos, invertidos para ver lo nuevo arriba
-        const entries = (alarmHistory[site] || []).slice(-50).reverse();
-        entries.forEach(entry => {
-            const li = document.createElement('li');
-            li.innerHTML = `<small style="color:blue">[${entry.time}]</small> <b>${entry.name}</b>: ${entry.state}`;
-            list.appendChild(li);
-        });
-        syncLabel.innerText = "Última sincronización: " + new Date().toLocaleTimeString();
-    }
+        //const entries = (alarmHistory[site] || []).slice(-50).reverse();
+        //entries.forEach(entry => {
+          //  const li = document.createElement('li');
+            //li.innerHTML = `<small style="color:blue">[${entry.time}]</small> <b>${entry.name}</b>: ${entry.state}`;
+            //list.appendChild(li);
+        //});
+        //syncLabel.innerText = "Última sincronización: " + new Date().toLocaleTimeString();
+    //}
+
+	function renderHistory(site) {
+  	const list = document.getElementById(`history-${site}`);
+  	if (!list) return;
+
+  	list.innerHTML = '';
+ 	// Clonamos e invertimos para que lo más nuevo esté arriba
+  	const entries = [...alarmHistory[site]].reverse();
+
+  	entries.forEach(entry => {
+    const li = document.createElement('li');
+    li.style.listStyle = "none";
+    li.style.borderBottom = "1px solid #ddd";
+    li.style.padding = "4px 0";
+    
+    // Usamos entry.time directamente porque ya viene formateado desde Google
+    li.innerHTML = `<small style="color: #444; font-weight: bold;">[${entry.time}]</small> 
+                    <span style="margin-left: 8px;">${entry.name}</span> 
+                    <b style="color: ${entry.state.includes('🚨') ? 'red' : 'green'};"> ➡️ ${entry.state}</b>`;
+    
+    list.appendChild(li);
+  });
+}
 
     function logAlarmChange(site, name, state) {
         const entry = { site, name, state };
