@@ -784,13 +784,13 @@ body {
 	});
 
 	client.on('message', (topic, message) => {
-    // Caso 1: Alarmas Externas (OTY / ITR)
-	console.log("Mensaje recibido en:", topic, "Contenido:", message.toString());
+    console.log("Mensaje recibido en:", topic, "Contenido:", message.toString());
 		
+	// Caso 1: Alarmas Externas (OTY / ITR)	
     if (topic.includes('External_Alarms')) {
         const value = (message[0] << 8) | message[1];
         const site = topic.includes('OTY') ? 'OTY' : 'ITR';
-        document.getElementById(`byte-external-${site}`).textContent = `Bytes: ${message[0]}, ${message[1]}`;
+        //document.getElementById(`byte-external-${site}`).textContent = `Bytes: ${message[0]}, ${message[1]}`;
 		const alarmNames = (site === 'OTY') ? alarmNamesExternalOTY : alarmNamesExternalITR;
         //updateAlarms(`alarms-external-${site}`, value, site === 'OTY' ? alarmNamesExternalOTY : alarmNamesExternalITR);
 		updateAlarms(`alarms-external-${site}`, value, alarmNames);
@@ -833,11 +833,10 @@ body {
         ['OTY', 'ITR'].forEach(site => {
             const container = document.getElementById(`tab-${site === 'OTY' ? '0' : '1'}`);	
             const div = document.createElement('div');
-            div.innerHTML = `
-                <h3>🚨 Historial Global ${site}</h3>
+            div.innerHTML = 
+				`<h3>🚨 Historial Global ${site}</h3>
                 <div id="sync-time-${site}" class="sync-status">Sincronizando con Google...</div>
-                <ul id="history-${site}" class="history-box"></ul>
-            `;
+                <ul id="history-${site}" class="history-box"></ul> `;
             container.appendChild(div);
         });
     }
@@ -849,7 +848,8 @@ body {
             alarmHistory = data;
             renderHistory('OTY');
             renderHistory('ITR');
-        } catch (e) { console.error("Error de sincronización", e); }
+        } 
+		catch (e) { console.error("Error de sincronización", e); }
     }
 
    // function renderHistory(site) {
