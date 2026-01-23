@@ -813,19 +813,23 @@ body {
         });
     }
 
-    async function fetchGlobalHistory() {
-        try {
-            const response = await fetch(GOOGLE_URL);
-            const data = await response.json();
-            if (data) {
-                alarmHistory = data;
-                renderHistory('OTY');
-                renderHistory('ITR');
-            }
-        } catch (e) { 
-            console.error("Error de sincronización:", e);
+async function fetchGlobalHistory() {
+    try {
+        const response = await fetch(GOOGLE_URL);
+        const data = await response.json();
+        
+        if (data && (data.OTY || data.ITR)) {
+            alarmHistory = data;
+            renderHistory('OTY');
+            renderHistory('ITR');
         }
+    } catch (e) {
+        console.error("Error cargando historial:", e);
+        // Si hay error, intentamos quitar el mensaje de "Cargando"
+        document.getElementById("sync-time-OTY").innerText = "Error de conexión";
+        document.getElementById("sync-time-ITR").innerText = "Error de conexión";
     }
+}
 
 // 1. Esta función envía el dato pero NO lo escribe en la pantalla todavía
 function logAlarmChange(site, name, state) {
@@ -842,34 +846,34 @@ function logAlarmChange(site, name, state) {
     console.log("Evento enviado a Google para registro oficial.");
 }
 
-// 2. Esta función limpia y dibuja lo que recibe de Google
 function renderHistory(site) {
     const list = document.getElementById(`history-${site}`);
+    const syncLabel = document.getElementById(`sync-time-${site}`);
     if (!list) return;
 
-    // LIMPIEZA TOTAL: Borramos todo lo que haya antes de dibujar
-    list.innerHTML = '';
+    list.innerHTML = ''; // Limpiamos para evitar duplicados visuales
 
-    const data = alarmHistory[site] || [];
-    // Invertimos para ver lo más reciente arriba y limitamos a 30
-    const entries = [...data].reverse().slice(0, 30);
+    const entries = (alarmHistory[site] || []).slice().reverse().slice(0, 30);
     
+    if (entries.length === 0) {
+        list.innerHTML = '<li>Sin eventos registrados</li>';
+    }
+
     entries.forEach(entry => {
         const li = document.createElement('li');
-        li.style.cssText = "border-bottom:1px solid #eee; padding:5px; font-size:12px; display:flex; justify-content:space-between;";
+        li.style.borderBottom = "1px solid #eee";
+        li.style.padding = "5px 0";
+        li.style.fontSize = "12px";
         
-        const colorStatus = entry.state.includes('🚨') ? '#d9534f' : '#5cb85c';
+        const color = entry.state.includes('🚨') ? 'red' : 'green';
         
-        // Usamos entry.time tal cual viene de Google sin convertirlo a Date()
-        li.innerHTML = `
-            <span style="color:#666;">[${entry.time}]</span>
-            <strong style="margin: 0 10px;">${entry.name}</strong>
-            <span style="color:${colorStatus}; font-weight:bold;">${entry.state}</span>
-        `;
+        // MOSTRAR EL TEXTO DIRECTO
+        li.innerHTML = `<span style="color:#666;">[${entry.time}]</span> <b>${entry.name}</b> <span style="color:${color}; float:right;">${entry.state}</span>`;
         list.appendChild(li);
     });
-}
 
+    if (syncLabel) syncLabel.innerText = "Actualizado: " + new Date().toLocaleTimeString();
+}
     const figureMapOTY = { 0: "poste_OTY", 1: "generador_OTY", 2: "breaker_OTY", 3: "rectificador_OTY", 4: "termometro_OTY", 5: "bateria_OTY", 8: "persona_OTY", 9: "barra-tierra_OTY" };
     const figureMapITR = { 0: "poste_ITR", 1: "generador_ITR", 2: "breaker_ITR", 3: "rectificador_ITR", 4: "termometro_ITR", 5: "bateria_ITR", 8: "persona_ITR", 9: "barra-tierra_ITR" };
     let previousAlarmStates = { 'alarms-external-OTY': null, 'alarms-external-ITR': null };
