@@ -850,25 +850,17 @@ body {
     }
 
 function logAlarmChange(site, name, state) {
-    const entry = { 
-        site: site, 
-        name: name, 
-        state: state 
-        // Ya no enviamos "time" desde aquí
-    };
+    const entry = { site, name, state };
 
-    // 1. Actualización local rápida (con la hora de tu PC momentáneamente)
-    const localTime = new Date().toLocaleTimeString();
-    if (!alarmHistory[site]) alarmHistory[site] = [];
-    alarmHistory[site].push({ time: localTime, name, state });
-    renderHistory(site);
-
-    // 2. Enviar a Google (Él pondrá la hora oficial de Tijuana)
-    fetch(GOOGLE_URL, { 
-        method: 'POST', 
-        mode: 'no-cors', 
-        body: JSON.stringify(entry) 
+    // ENVIAR A GOOGLE
+    fetch(GOOGLE_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        body: JSON.stringify(entry)
     });
+    
+    // Opcional: Mostrar un aviso temporal de "Registrando..." si deseas
+    console.log(`Registrando evento en la nube para ${site}...`);
 }
 
     const figureMapOTY = { 0: "poste_OTY", 1: "generador_OTY", 2: "breaker_OTY", 3: "rectificador_OTY", 4: "termometro_OTY", 5: "bateria_OTY", 8: "persona_OTY", 9: "barra-tierra_OTY" };
@@ -925,7 +917,7 @@ function logAlarmChange(site, name, state) {
     // Inicialización
     createHistoryContainers();
     fetchGlobalHistory();
-    setInterval(fetchGlobalHistory, 30000); 
+    setInterval(fetchGlobalHistory, 15000);
 </script>
 </body>
 </html>
