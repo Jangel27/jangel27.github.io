@@ -827,27 +827,28 @@ body {
         }
     }
 
-    function renderHistory(site) {
-        const list = document.getElementById(`history-${site}`);
-        const syncLabel = document.getElementById(`sync-time-${site}`);
-        if (!list) return;
+function renderHistory(site) {
+    const list = document.getElementById(`history-${site}`);
+    if (!list) return;
 
-        list.innerHTML = '';
-        // Mostramos últimos 50, invertidos (más nuevo arriba)
-        const entries = [...(alarmHistory[site] || [])].reverse().slice(0, 50);
+    list.innerHTML = '';
+    // Invertimos para que lo más nuevo salga arriba
+    const entries = [...(alarmHistory[site] || [])].reverse().slice(0, 50);
+    
+    entries.forEach(entry => {
+        const li = document.createElement('li');
+        li.style.borderBottom = "1px solid #eee";
+        li.style.padding = "5px 0";
         
-        entries.forEach(entry => {
-            const li = document.createElement('li');
-            li.style.borderBottom = "1px solid #eee";
-            li.style.padding = "3px 0";
-            li.style.fontSize = "13px";
-            // Resaltamos el estado
-            const colorStatus = entry.state.includes('🚨') ? 'red' : 'green';
-            li.innerHTML = `<span style="color:#555;">[${entry.time}]</span> <b>${entry.name}</b> ➡️ <span style="color:${colorStatus}; font-weight:bold;">${entry.state}</span>`;
-            list.appendChild(li);
-        });
-        if (syncLabel) syncLabel.innerText = "Sincronizado: " + new Date().toLocaleTimeString();
-    }
+        const colorStatus = entry.state.includes('🚨') ? 'red' : 'green';
+        
+        // Imprimimos entry.time directamente sin procesarlo
+        li.innerHTML = `<span style="color:#666; font-family:monospace;">[${entry.time}]</span> 
+                        <b style="margin-left:10px;">${entry.name}</b> 
+                        <span style="color:${colorStatus}; float:right; font-weight:bold;">${entry.state}</span>`;
+        list.appendChild(li);
+    });
+}
 
 function logAlarmChange(site, name, state) {
     const entry = { site, name, state };
