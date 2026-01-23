@@ -805,6 +805,11 @@ body {
         //}
     }
 });
+	// Función auxiliar para que la hora local siempre tenga el mismo formato
+	function formatDateLocal(date) {
+    const pad = (n) => n.toString().padStart(2, '0');
+    return `${pad(date.getDate())}/${pad(date.getMonth()+1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+    }
 	  
 	function updateDieselLevel(porcentaje) {
       const fill = document.getElementById('diesel-fill');
@@ -928,12 +933,6 @@ body {
     mode: 'no-cors',
     body: JSON.stringify(entry) 
   });
-}
-
-// Función auxiliar para que la hora local siempre tenga el mismo formato
-function Utilities.formatDateLocal(date) {
-    const pad = (n) => n.toString().padStart(2, '0');
-    return `${pad(date.getDate())}/${pad(date.getMonth()+1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
 }
 
 	// Mapas de figuras
