@@ -818,16 +818,13 @@ async function fetchGlobalHistory() {
         const response = await fetch(GOOGLE_URL);
         const data = await response.json();
         
-        if (data && (data.OTY || data.ITR)) {
+        if (data) {
             alarmHistory = data;
             renderHistory('OTY');
             renderHistory('ITR');
         }
     } catch (e) {
-        console.error("Error cargando historial:", e);
-        // Si hay error, intentamos quitar el mensaje de "Cargando"
-        document.getElementById("sync-time-OTY").innerText = "Error de conexión";
-        document.getElementById("sync-time-ITR").innerText = "Error de conexión";
+        console.error("Falla al conectar con Google:", e);
     }
 }
 
@@ -851,28 +848,43 @@ function renderHistory(site) {
     const syncLabel = document.getElementById(`sync-time-${site}`);
     if (!list) return;
 
-    list.innerHTML = ''; // Limpiamos para evitar duplicados visuales
+    // LIMPIEZA: Esto quita el "Cargando" y evita duplicados
+    list.innerHTML = ''; 
 
-    const entries = (alarmHistory[site] || []).slice().reverse().slice(0, 30);
+    // Tomamos los datos de Google. Si no hay, usamos lista vacía.
+    const entries = (alarmHistory[site] || []);
     
-    if (entries.length === 0) {
-        list.innerHTML = '<li>Sin eventos registrados</li>';
-    }
+    // Invertimos para ver lo más reciente arriba
+    const displayEntries = [...entries].reverse().slice(0, 30);
 
-    entries.forEach(entry => {
+    displayEntries.forEach(entry => {
         const li = document.createElement('li');
-        li.style.borderBottom = "1px solid #eee";
-        li.style.padding = "5px 0";
-        li.style.fontSize = "12px";
+        li.style.cssText = "border-bottom:1px solid #ddd; padding:5px; font-size:12px; list-style:none;";
         
         const color = entry.state.includes('🚨') ? 'red' : 'green';
         
-        // MOSTRAR EL TEXTO DIRECTO
-        li.innerHTML = `<span style="color:#666;">[${entry.time}]</span> <b>${entry.name}</b> <span style="color:${color}; float:right;">${entry.state}</span>`;
+        // El .replace(/^'/, "") quita el apóstrofe invisible si Google lo devuelve
+        const timeClean = entry.time.replace(/^'/, "");
+
+        li.innerHTML = `<span style="color:#666;">[${timeClean}]</span> <b>${entry.name}</b> <span style="color:${color}; float:right; font-weight:bold;">${entry.state}</span>`;
         list.appendChild(li);
     });
 
-    if (syncLabel) syncLabel.innerText = "Actualizado: " + new Date().toLocaleTimeString();
+    if (syncLabel) {
+        syncLabel.innerText = "Sincronizado: " + new Date().toLocaleTimeString();
+    }
+}
+
+function logAlarmChange(site, name, state) {
+    // ENVIAR A GOOGLE SOLAMENTE
+    // No hacemos .push local, así evitamos el DOBLE registro.
+    fetch(GOOGLE_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        body: JSON.stringify({ site, name, state })
+    });
+    
+    console.log("Alarma reportada a Google. Aparecerá en el próximo refresco.");
 }
     const figureMapOTY = { 0: "poste_OTY", 1: "generador_OTY", 2: "breaker_OTY", 3: "rectificador_OTY", 4: "termometro_OTY", 5: "bateria_OTY", 8: "persona_OTY", 9: "barra-tierra_OTY" };
     const figureMapITR = { 0: "poste_ITR", 1: "generador_ITR", 2: "breaker_ITR", 3: "rectificador_ITR", 4: "termometro_ITR", 5: "bateria_ITR", 8: "persona_ITR", 9: "barra-tierra_ITR" };
