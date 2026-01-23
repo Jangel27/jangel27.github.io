@@ -827,41 +827,47 @@ body {
         }
     }
 
+// 1. Esta función envía el dato pero NO lo escribe en la pantalla todavía
+function logAlarmChange(site, name, state) {
+    const entry = { site, name, state };
+
+    fetch(GOOGLE_URL, {
+        method: 'POST',
+        mode: 'no-cors', // No-cors para evitar errores de seguridad
+        body: JSON.stringify(entry)
+    });
+    
+    // NO usamos alarmHistory[site].push(entry) aquí. 
+    // Esperamos a que la siguiente sincronización traiga el dato oficial.
+    console.log("Evento enviado a Google para registro oficial.");
+}
+
+// 2. Esta función limpia y dibuja lo que recibe de Google
 function renderHistory(site) {
     const list = document.getElementById(`history-${site}`);
     if (!list) return;
 
+    // LIMPIEZA TOTAL: Borramos todo lo que haya antes de dibujar
     list.innerHTML = '';
-    // Invertimos para que lo más nuevo salga arriba
-    const entries = [...(alarmHistory[site] || [])].reverse().slice(0, 50);
+
+    const data = alarmHistory[site] || [];
+    // Invertimos para ver lo más reciente arriba y limitamos a 30
+    const entries = [...data].reverse().slice(0, 30);
     
     entries.forEach(entry => {
         const li = document.createElement('li');
-        li.style.borderBottom = "1px solid #eee";
-        li.style.padding = "5px 0";
+        li.style.cssText = "border-bottom:1px solid #eee; padding:5px; font-size:12px; display:flex; justify-content:space-between;";
         
-        const colorStatus = entry.state.includes('🚨') ? 'red' : 'green';
+        const colorStatus = entry.state.includes('🚨') ? '#d9534f' : '#5cb85c';
         
-        // Imprimimos entry.time directamente sin procesarlo
-        li.innerHTML = `<span style="color:#666; font-family:monospace;">[${entry.time}]</span> 
-                        <b style="margin-left:10px;">${entry.name}</b> 
-                        <span style="color:${colorStatus}; float:right; font-weight:bold;">${entry.state}</span>`;
+        // Usamos entry.time tal cual viene de Google sin convertirlo a Date()
+        li.innerHTML = `
+            <span style="color:#666;">[${entry.time}]</span>
+            <strong style="margin: 0 10px;">${entry.name}</strong>
+            <span style="color:${colorStatus}; font-weight:bold;">${entry.state}</span>
+        `;
         list.appendChild(li);
     });
-}
-
-function logAlarmChange(site, name, state) {
-    const entry = { site, name, state };
-
-    // ENVIAR A GOOGLE
-    fetch(GOOGLE_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        body: JSON.stringify(entry)
-    });
-    
-    // Opcional: Mostrar un aviso temporal de "Registrando..." si deseas
-    console.log(`Registrando evento en la nube para ${site}...`);
 }
 
     const figureMapOTY = { 0: "poste_OTY", 1: "generador_OTY", 2: "breaker_OTY", 3: "rectificador_OTY", 4: "termometro_OTY", 5: "bateria_OTY", 8: "persona_OTY", 9: "barra-tierra_OTY" };
