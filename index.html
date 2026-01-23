@@ -765,12 +765,17 @@ body {
 
     client.on('message', (topic, message) => {
         if (topic.includes('External_Alarms')) {
-            const value = (message[0] << 8) | message[1];
+            const highByte = message[0];
+            const lowByte = message[1];
+            const value = (highByte << 8) | lowByte;
+            const binStr = value.toString(2).padStart(16, '0');
             const site = topic.includes('OTY') ? 'OTY' : 'ITR';
-            
-            // Limpiar el mensaje de "Esperando datos" la primera vez
-            const infoDiv = document.getElementById(`byte-external-${site}`);
-            if(infoDiv) infoDiv.textContent = `Datos recibidos: ${new Date().toLocaleTimeString()}`;
+
+            // RESTAURADO: Visualización de bytes recibidos
+            const byteDisplay = document.getElementById(`byte-external-${site}`);
+            if (byteDisplay) {
+                byteDisplay.textContent = `Bytes recibidos (${site}): ${highByte}, ${lowByte} | bin: ${binStr}`;
+            }
 
             updateAlarms(`alarms-external-${site}`, value, (site === 'OTY' ? alarmNamesExternalOTY : alarmNamesExternalITR));
         } else if (topic === 'esp32/NivelDiesel_ITR') {
@@ -778,6 +783,7 @@ body {
         }
     });
 
+    // Función de fecha local (GMT-8 o la de tu PC)
     function formatDateLocal(date) {
         const pad = (n) => n.toString().padStart(2, '0');
         return `${pad(date.getDate())}/${pad(date.getMonth()+1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
@@ -800,10 +806,9 @@ body {
             const container = document.getElementById(`tab-${site === 'OTY' ? '0' : '1'}`);
             if (!container) return;
             const div = document.createElement('div');
-            div.style.marginTop = "20px";
             div.innerHTML = `<h3>🚨 Historial Global ${site}</h3>
-                             <div id="sync-time-${site}" class="sync-status" style="font-size:12px; color:#555;">Iniciando sincronización...</div>
-                             <ul id="history-${site}" class="history-box" style="list-style:none; padding:10px; background:white; border:1px solid #ccc; max-height:200px; overflow-y:auto;"></ul>`;
+                             <div id="sync-time-${site}" class="sync-status" style="font-size:12px; color:#666;">Cargando historial...</div>
+                             <ul id="history-${site}" class="history-box" style="list-style:none; padding:10px; background:#fff; border:1px solid #ccc; max-height:200px; overflow-y:auto;"></ul>`;
             container.appendChild(div);
         });
     }
@@ -812,14 +817,13 @@ body {
         try {
             const response = await fetch(GOOGLE_URL);
             const data = await response.json();
-            if (data && (data.OTY || data.ITR)) {
+            if (data) {
                 alarmHistory = data;
                 renderHistory('OTY');
                 renderHistory('ITR');
             }
         } catch (e) { 
-            console.error("Error sincronizando:", e);
-            document.querySelectorAll('.sync-status').forEach(el => el.innerText = "Error de conexión con base de datos");
+            console.error("Error de sincronización:", e);
         }
     }
 
@@ -829,37 +833,43 @@ body {
         if (!list) return;
 
         list.innerHTML = '';
-        const entries = [...(alarmHistory[site] || [])].reverse();
+        // Mostramos últimos 50, invertidos (más nuevo arriba)
+        const entries = [...(alarmHistory[site] || [])].reverse().slice(0, 50);
         
         entries.forEach(entry => {
             const li = document.createElement('li');
             li.style.borderBottom = "1px solid #eee";
-            li.style.padding = "5px 0";
+            li.style.padding = "3px 0";
             li.style.fontSize = "13px";
-            // Usamos la hora que viene de la base de datos
-            li.innerHTML = `<span style="color:#666; font-weight:bold;">[${entry.time}]</span> <b>${entry.name}</b> <span style="color:${entry.state.includes('🚨') ? 'red' : 'green'}">${entry.state}</span>`;
+            // Resaltamos el estado
+            const colorStatus = entry.state.includes('🚨') ? 'red' : 'green';
+            li.innerHTML = `<span style="color:#555;">[${entry.time}]</span> <b>${entry.name}</b> ➡️ <span style="color:${colorStatus}; font-weight:bold;">${entry.state}</span>`;
             list.appendChild(li);
         });
         if (syncLabel) syncLabel.innerText = "Sincronizado: " + new Date().toLocaleTimeString();
     }
 
-    function logAlarmChange(site, name, state) {
-        // Generar hora local fija
-        const timestamp = formatDateLocal(new Date());
-        const entry = { time: timestamp, name: name, state: state, site: site };
-        
-        // Agregar localmente para ver el cambio al instante
-        if (!alarmHistory[site]) alarmHistory[site] = [];
-        alarmHistory[site].push(entry);
-        renderHistory(site);
+function logAlarmChange(site, name, state) {
+    const entry = { 
+        site: site, 
+        name: name, 
+        state: state 
+        // Ya no enviamos "time" desde aquí
+    };
 
-        // Enviar a Google incluyendo la hora fija generada arriba
-        fetch(GOOGLE_URL, { 
-            method: 'POST', 
-            mode: 'no-cors', 
-            body: JSON.stringify(entry) 
-        }).catch(e => console.error("Error al reportar a la nube:", e));
-    }
+    // 1. Actualización local rápida (con la hora de tu PC momentáneamente)
+    const localTime = new Date().toLocaleTimeString();
+    if (!alarmHistory[site]) alarmHistory[site] = [];
+    alarmHistory[site].push({ time: localTime, name, state });
+    renderHistory(site);
+
+    // 2. Enviar a Google (Él pondrá la hora oficial de Tijuana)
+    fetch(GOOGLE_URL, { 
+        method: 'POST', 
+        mode: 'no-cors', 
+        body: JSON.stringify(entry) 
+    });
+}
 
     const figureMapOTY = { 0: "poste_OTY", 1: "generador_OTY", 2: "breaker_OTY", 3: "rectificador_OTY", 4: "termometro_OTY", 5: "bateria_OTY", 8: "persona_OTY", 9: "barra-tierra_OTY" };
     const figureMapITR = { 0: "poste_ITR", 1: "generador_ITR", 2: "breaker_ITR", 3: "rectificador_ITR", 4: "termometro_ITR", 5: "bateria_ITR", 8: "persona_ITR", 9: "barra-tierra_ITR" };
@@ -879,6 +889,7 @@ body {
             current[i] = bit;
             if (bit) hasActiveAlarm = true;
 
+            // Registro de cambios (Solo si ya hay un estado previo registrado)
             if (prev !== null && prev[i] !== bit) {
                 logAlarmChange(site, alarmNames[i], bit ? '🚨 ACTIVADA' : '✅ CESÓ');
             }
@@ -911,9 +922,10 @@ body {
         if(tabs[idx]) tabs[idx].classList.toggle('alarm-active-tab', active);
     }
 
+    // Inicialización
     createHistoryContainers();
     fetchGlobalHistory();
-    setInterval(fetchGlobalHistory, 45000); // Sincronización cada 45s para mayor estabilidad
+    setInterval(fetchGlobalHistory, 30000); 
 </script>
 </body>
 </html>
