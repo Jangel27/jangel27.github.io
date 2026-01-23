@@ -755,7 +755,6 @@ body {
 		clean: true
     });
 
-// Listados de nombres (Mantenemos tus arreglos originales)
     const alarmNamesExternalOTY = ["FALLA*ALIM*COM*OTY","GPO*ELEC*OPER*OTY","FALLA*FUS*DIST*A*OTY","FALLA*RECT*A*OTY","ALTA*TEMP*CX*OTY","FALLA*FUS*VOLTA*A*OTY","BAT*EN*OPER*A*OTY","BAJO*VOLTAJE*A*OTY","PRESENCIA*BANCO*BAT*OTY","ROBO*BARRA*TIERRA*OTY","ALARMA LIBRE 3","ALARMA LIBRE 4","ALARMA LIBRE 5","ALARMA LIBRE 6","ALARMA LIBRE 7","ALARMA LIBRE 8"];
     const alarmNamesExternalITR = ["FALLA*ALIM*COM*ITR","GPO*ELEC*OPER*ITR","FALLA*FUS*DIST*A*ITR","FALLA*RECT*A*ITR","ALTA*TEMP*CX*ITR","FALLA*FUS*VOLTA*A*ITR","BAT*EN*OPER*A*ITR","BAJO*VOLTAJE*A*ITR","PRESENCIA*BANCO*BAT*ITR","ROBO*BARRA*TIERRA*ITR","ALARMA LIBRE 3","ALARMA LIBRE 4","ALARMA LIBRE 5","ALARMA LIBRE 6","ALARMA LIBRE 7","ALARMA LIBRE 8"];
 
@@ -768,13 +767,17 @@ body {
         if (topic.includes('External_Alarms')) {
             const value = (message[0] << 8) | message[1];
             const site = topic.includes('OTY') ? 'OTY' : 'ITR';
+            
+            // Limpiar el mensaje de "Esperando datos" la primera vez
+            const infoDiv = document.getElementById(`byte-external-${site}`);
+            if(infoDiv) infoDiv.textContent = `Datos recibidos: ${new Date().toLocaleTimeString()}`;
+
             updateAlarms(`alarms-external-${site}`, value, (site === 'OTY' ? alarmNamesExternalOTY : alarmNamesExternalITR));
         } else if (topic === 'esp32/NivelDiesel_ITR') {
             updateDieselLevel(parseInt(message.toString()));
         }
     });
 
-    // === 2. FUNCIONES DE APOYO Y FECHA ===
     function formatDateLocal(date) {
         const pad = (n) => n.toString().padStart(2, '0');
         return `${pad(date.getDate())}/${pad(date.getMonth()+1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
@@ -792,15 +795,15 @@ body {
         text.textContent = `${nivel}%`;
     }
 
-    // === 3. LÓGICA DE HISTORIAL ===
     function createHistoryContainers() {
         ['OTY', 'ITR'].forEach(site => {
             const container = document.getElementById(`tab-${site === 'OTY' ? '0' : '1'}`);
             if (!container) return;
             const div = document.createElement('div');
+            div.style.marginTop = "20px";
             div.innerHTML = `<h3>🚨 Historial Global ${site}</h3>
-                             <div id="sync-time-${site}" class="sync-status">Sincronizando...</div>
-                             <ul id="history-${site}" class="history-box" style="list-style:none; padding:0;"></ul>`;
+                             <div id="sync-time-${site}" class="sync-status" style="font-size:12px; color:#555;">Iniciando sincronización...</div>
+                             <ul id="history-${site}" class="history-box" style="list-style:none; padding:10px; background:white; border:1px solid #ccc; max-height:200px; overflow-y:auto;"></ul>`;
             container.appendChild(div);
         });
     }
@@ -809,14 +812,14 @@ body {
         try {
             const response = await fetch(GOOGLE_URL);
             const data = await response.json();
-            if (data) {
+            if (data && (data.OTY || data.ITR)) {
                 alarmHistory = data;
                 renderHistory('OTY');
                 renderHistory('ITR');
             }
         } catch (e) { 
             console.error("Error sincronizando:", e);
-            document.querySelectorAll('.sync-status').forEach(el => el.innerText = "Error de sincronización con Google");
+            document.querySelectorAll('.sync-status').forEach(el => el.innerText = "Error de conexión con base de datos");
         }
     }
 
@@ -824,31 +827,40 @@ body {
         const list = document.getElementById(`history-${site}`);
         const syncLabel = document.getElementById(`sync-time-${site}`);
         if (!list) return;
+
         list.innerHTML = '';
         const entries = [...(alarmHistory[site] || [])].reverse();
+        
         entries.forEach(entry => {
             const li = document.createElement('li');
-            li.style.borderBottom = "1px solid #ddd";
-            li.style.padding = "4px 0";
-            li.innerHTML = `<small style="color:#555;">[${entry.time}]</small> <b>${entry.name}</b> ➡️ ${entry.state}`;
+            li.style.borderBottom = "1px solid #eee";
+            li.style.padding = "5px 0";
+            li.style.fontSize = "13px";
+            // Usamos la hora que viene de la base de datos
+            li.innerHTML = `<span style="color:#666; font-weight:bold;">[${entry.time}]</span> <b>${entry.name}</b> <span style="color:${entry.state.includes('🚨') ? 'red' : 'green'}">${entry.state}</span>`;
             list.appendChild(li);
         });
-        if (syncLabel) syncLabel.innerText = "Última sincronización: " + new Date().toLocaleTimeString();
+        if (syncLabel) syncLabel.innerText = "Sincronizado: " + new Date().toLocaleTimeString();
     }
 
     function logAlarmChange(site, name, state) {
+        // Generar hora local fija
         const timestamp = formatDateLocal(new Date());
         const entry = { time: timestamp, name: name, state: state, site: site };
         
+        // Agregar localmente para ver el cambio al instante
         if (!alarmHistory[site]) alarmHistory[site] = [];
         alarmHistory[site].push(entry);
         renderHistory(site);
 
-        // Envío a Google
-        fetch(GOOGLE_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(entry) }).catch(e => console.error(e));
+        // Enviar a Google incluyendo la hora fija generada arriba
+        fetch(GOOGLE_URL, { 
+            method: 'POST', 
+            mode: 'no-cors', 
+            body: JSON.stringify(entry) 
+        }).catch(e => console.error("Error al reportar a la nube:", e));
     }
 
-    // === 4. LÓGICA DE ALARMAS Y FIGURAS ===
     const figureMapOTY = { 0: "poste_OTY", 1: "generador_OTY", 2: "breaker_OTY", 3: "rectificador_OTY", 4: "termometro_OTY", 5: "bateria_OTY", 8: "persona_OTY", 9: "barra-tierra_OTY" };
     const figureMapITR = { 0: "poste_ITR", 1: "generador_ITR", 2: "breaker_ITR", 3: "rectificador_ITR", 4: "termometro_ITR", 5: "bateria_ITR", 8: "persona_ITR", 9: "barra-tierra_ITR" };
     let previousAlarmStates = { 'alarms-external-OTY': null, 'alarms-external-ITR': null };
@@ -859,6 +871,7 @@ body {
         const site = containerId.includes('OTY') ? 'OTY' : 'ITR';
         const current = [];
         let hasActiveAlarm = false;
+
         container.innerHTML = '';
 
         for (let i = 0; i < 16; i++) {
@@ -866,7 +879,7 @@ body {
             current[i] = bit;
             if (bit) hasActiveAlarm = true;
 
-            if (prev && prev[i] !== bit) {
+            if (prev !== null && prev[i] !== bit) {
                 logAlarmChange(site, alarmNames[i], bit ? '🚨 ACTIVADA' : '✅ CESÓ');
             }
 
@@ -898,10 +911,9 @@ body {
         if(tabs[idx]) tabs[idx].classList.toggle('alarm-active-tab', active);
     }
 
-    // Inicialización manual
     createHistoryContainers();
     fetchGlobalHistory();
-    setInterval(fetchGlobalHistory, 30000);
+    setInterval(fetchGlobalHistory, 45000); // Sincronización cada 45s para mayor estabilidad
 </script>
 </body>
 </html>
