@@ -860,34 +860,30 @@ function renderHistory(site) {
     const syncLabel = document.getElementById(`sync-time-${site}`);
     if (!list) return;
 
-    // Limpiar lista para evitar duplicados
     list.innerHTML = '';
 
-    // Tomar los datos del historial
     const entries = (alarmHistory[site] || []);
     const displayEntries = [...entries].reverse().slice(0, 30);
 
     displayEntries.forEach(entry => {
-        const li = document.createElement('li');
-        li.style.cssText = "border-bottom:1px solid #ddd; padding:5px; font-size:12px; list-style:none;";
+      const li = document.createElement('li');
+      li.style.cssText = "border-bottom:1px solid #ddd; padding:5px; font-size:12px; list-style:none;";
 
-        // Color según estado
-        const color = entry.state.includes('🚨') ? 'red' : 'green';
+      const color = entry.state.includes('🚨') ? 'red' : 'green';
 
-        // Usar directamente la fecha que ya viene de Google Sheets (GMT-8)
-        const timeClean = entry.time; 
+      // Usar la fecha tal cual viene de Sheets (GMT-8)
+      const timeClean = entry.time; 
 
-        li.innerHTML = `<span style="color:#666;">[${timeClean}]</span> 
-                        <b>${entry.name}</b> 
-                        <span style="color:${color}; float:right; font-weight:bold;">${entry.state}</span>`;
-        list.appendChild(li);
+      li.innerHTML = `<span style="color:#666;">[${timeClean}]</span> <b>${entry.name}</b> <span style="color:${color}; float:right; font-weight:bold;">${entry.state}</span>`;
+      list.appendChild(li);
     });
 
-    // Mostrar hora de sincronización también en GMT-8 usando tu función local
     if (syncLabel) {
-        syncLabel.innerText = "Sincronizado: " + formatDateLocal(new Date());
+      // Mostrar hora de sincronización local (opcional)
+      syncLabel.innerText = "Sincronizado: " + new Date().toLocaleTimeString('es-MX', { hour12:false });
     }
 }
+
 
   // --- Mapas de figuras ---
   const figureMapOTY = { 0: "poste_OTY", 1: "generador_OTY", 2: "breaker_OTY", 3: "rectificador_OTY", 4: "termometro_OTY", 5: "bateria_OTY", 8: "persona_OTY", 9: "barra-tierra_OTY" };
