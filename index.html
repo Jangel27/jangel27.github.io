@@ -871,7 +871,7 @@ function renderHistory(site) {
     });
 
     if (syncLabel) {
-        syncLabel.innerText = "Sincronizado: " + new Date().toLocaleTimeString();
+        syncLabel.innerText = "Sincronizado: " + formatDateLocal(new Date()).toLocaleTimeString();
     }
 }
 
