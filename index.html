@@ -820,8 +820,8 @@ body {
       const data = await response.json();
       if (data) {
         alarmHistory = data;
-        renderHistory('OTY');
-        renderHistory('ITR');
+        tory('OTY');
+        tory('ITR');
       }
     } catch (e) {
       console.error("Falla al conectar con Google:", e);
@@ -829,30 +829,26 @@ body {
   }
 
   // --- Función única para registrar alarmas ---
-  function logAlarmChange(site, name, state) {
-    const entry = {
-      site,
-      name,
-      state,
-      time: formatDateLocal(new Date()) // hora local GMT-8
-    };
+function logAlarmChange(site, name, state) {
+    const entry = { site, name, state, time: formatDateLocal(new Date()) };
 
-    // 1️⃣ actualizar historial local
+    // Añadir localmente
     if (!alarmHistory[site]) alarmHistory[site] = [];
     alarmHistory[site].push(entry);
 
-    // 2️⃣ renderizar inmediatamente
+    // Render inmediato
     renderHistory(site);
 
-    // 3️⃣ enviar a Google Sheets
+    // Enviar a Google
     fetch(GOOGLE_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      body: JSON.stringify({ site, name, state, time: entry.time })
+        method: 'POST',
+        mode: 'no-cors',
+        body: JSON.stringify({ site, name, state })
     });
 
-    console.log("Alarma mostrada localmente y enviada a Google.");
-  }
+    console.log("Alarma registrada localmente y enviada a Google");
+}
+
 
   // --- Renderizar historial ---
 function renderHistory(site) {
