@@ -875,7 +875,8 @@ body {
     });
 
     if (syncLabel) {
-      syncLabel.innerText = "Sincronizado: " + formatDateLocal(new Date());
+      syncLabel.innerText = "Sincronizado: " + new Date().toLocaleTimeString('es-MX', { hour12:false, timeZone:'America/Los_Angeles' });
+
     }
   }
 
