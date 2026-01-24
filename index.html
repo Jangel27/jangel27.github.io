@@ -828,20 +828,31 @@ async function fetchGlobalHistory() {
     }
 }
 
-// 1. Esta función envía el dato pero NO lo escribe en la pantalla todavía
 function logAlarmChange(site, name, state) {
-    const entry = { site, name, state };
+    const entry = {
+        site,
+        name,
+        state,
+        time: formatDateLocal(new Date()) // Hora local GMT-8
+    };
 
+    // 1️⃣ Actualizar historial local
+    if (!alarmHistory[site]) alarmHistory[site] = [];
+    alarmHistory[site].push(entry);
+
+    // 2️⃣ Renderizar inmediatamente
+    renderHistory(site);
+
+    // 3️⃣ Enviar a Google Sheets
     fetch(GOOGLE_URL, {
         method: 'POST',
-        mode: 'no-cors', // No-cors para evitar errores de seguridad
-        body: JSON.stringify(entry)
+        mode: 'no-cors',
+        body: JSON.stringify({ site, name, state })
     });
-    
-    // NO usamos alarmHistory[site].push(entry) aquí. 
-    // Esperamos a que la siguiente sincronización traiga el dato oficial.
-    console.log("Evento enviado a Google para registro oficial.");
+
+    console.log("Alarma mostrada localmente y enviada a Google.");
 }
+
 
 function renderHistory(site) {
     const list = document.getElementById(`history-${site}`);
@@ -875,17 +886,6 @@ function renderHistory(site) {
     }
 }
 
-function logAlarmChange(site, name, state) {
-    // ENVIAR A GOOGLE SOLAMENTE
-    // No hacemos .push local, así evitamos el DOBLE registro.
-    fetch(GOOGLE_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        body: JSON.stringify({ site, name, state })
-    });
-    
-    console.log("Alarma reportada a Google. Aparecerá en el próximo refresco.");
-}
     const figureMapOTY = { 0: "poste_OTY", 1: "generador_OTY", 2: "breaker_OTY", 3: "rectificador_OTY", 4: "termometro_OTY", 5: "bateria_OTY", 8: "persona_OTY", 9: "barra-tierra_OTY" };
     const figureMapITR = { 0: "poste_ITR", 1: "generador_ITR", 2: "breaker_ITR", 3: "rectificador_ITR", 4: "termometro_ITR", 5: "bateria_ITR", 8: "persona_ITR", 9: "barra-tierra_ITR" };
     let previousAlarmStates = { 'alarms-external-OTY': null, 'alarms-external-ITR': null };
