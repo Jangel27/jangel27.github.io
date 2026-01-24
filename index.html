@@ -864,7 +864,7 @@ function renderHistory(site) {
         const color = entry.state.includes('🚨') ? 'red' : 'green';
         
         // El .replace(/^'/, "") quita el apóstrofe invisible si Google lo devuelve
-        const timeClean = entry.time.replace(/^'/, "");
+        const timeClean = String(entry.time).replace(/^'/, "");
 
         li.innerHTML = `<span style="color:#666;">[${timeClean}]</span> <b>${entry.name}</b> <span style="color:${color}; float:right; font-weight:bold;">${entry.state}</span>`;
         list.appendChild(li);
