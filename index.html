@@ -820,8 +820,8 @@ body {
       const data = await response.json();
       if (data) {
         alarmHistory = data;
-        tory('OTY');
-        tory('ITR');
+        renderHistory('OTY');
+        renderHistory('ITR');
       }
     } catch (e) {
       console.error("Falla al conectar con Google:", e);
