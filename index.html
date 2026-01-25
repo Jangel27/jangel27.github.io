@@ -857,21 +857,34 @@ function renderHistory(site) {
 
     list.innerHTML = '';
     const entries = (alarmHistory[site] || []);
-    const displayEntries = [...entries].reverse().slice(0, 30);
+    
+    // Filtro para evitar que el "eco" de Google Sheets muestre duplicados
+    const registroUnico = [];
+    const huellas = new Set();
 
-    displayEntries.forEach(entry => {
+    [...entries].reverse().forEach(entry => {
+        // Creamos una huella con nombre, estado y tiempo (sin segundos para mayor seguridad)
+        // Ejemplo: "FALLA*ALIM-🚨 ACTIVADA-24/01/2026 21:30"
+        const tiempoReducido = entry.time.substring(0, 16); 
+        const huella = `${entry.name}-${entry.state}-${tiempoReducido}`;
+
+        if (!huellas.has(huella)) {
+            huellas.add(huella);
+            registroUnico.push(entry);
+        }
+    });
+
+    registroUnico.slice(0, 30).forEach(entry => {
         const li = document.createElement('li');
-        li.style.cssText = "border-bottom:1px solid #ddd; padding:5px; font-size:12px; list-style:none;";
-
+        li.style.cssText = "border-bottom:1px solid #ddd; padding:5px; font-size:12px;";
         const color = entry.state.includes('🚨') ? 'red' : 'green';
-
-        // USAR EL TEXTO LITERAL: 
-        // No pases esto por "new Date()", usa directamente el valor que viene de la hoja
-        const timeClean = entry.time; 
-
-        li.innerHTML = `<span style="color:#666;">[${timeClean}]</span> <b>${entry.name}</b> <span style="color:${color}; float:right; font-weight:bold;">${entry.state}</span>`;
+        li.innerHTML = `<span style="color:#666;">[${entry.time}]</span> <b>${entry.name}</b> <span style="color:${color}; float:right;">${entry.state}</span>`;
         list.appendChild(li);
     });
+
+    // Actualizar el texto de carga
+    const syncLabel = document.getElementById(`sync-time-${site}`);
+    if (syncLabel) syncLabel.innerText = "Sincronizado: " + new Date().toLocaleTimeString();
 }
 
   // --- Mapas de figuras ---
