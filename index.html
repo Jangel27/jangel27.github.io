@@ -748,6 +748,10 @@ body {
 
     let alarmHistory = { 'OTY': [], 'ITR': [] };
 
+	// Filtros de control para evitar duplicados
+    let isSending = false;
+    let lastMqttValue = { 'OTY': null, 'ITR': null };
+
     // MQTT conexión WebSocket
       const client = mqtt.connect('wss://d4e6f442.ala.us-east-1.emqxsl.com:8084/mqtt', {
       	clientId: 'web_' + Math.random().toString(16).substr(2, 8),
@@ -756,196 +760,192 @@ body {
 		clean: true
     });
 
-  const alarmNamesExternalOTY = ["FALLA*ALIM*COM*OTY","GPO*ELEC*OPER*OTY","FALLA*FUS*DIST*A*OTY","FALLA*RECT*A*OTY","ALTA*TEMP*CX*OTY","FALLA*FUS*VOLTA*A*OTY","BAT*EN*OPER*A*OTY","BAJO*VOLTAJE*A*OTY","PRESENCIA*BANCO*BAT*OTY","ROBO*BARRA*TIERRA*OTY","ALARMA LIBRE 3","ALARMA LIBRE 4","ALARMA LIBRE 5","ALARMA LIBRE 6","ALARMA LIBRE 7","ALARMA LIBRE 8"];
-  const alarmNamesExternalITR = ["FALLA*ALIM*COM*ITR","GPO*ELEC*OPER*ITR","FALLA*FUS*DIST*A*ITR","FALLA*RECT*A*ITR","ALTA*TEMP*CX*ITR","FALLA*FUS*VOLTA*A*ITR","BAT*EN*OPER*A*ITR","BAJO*VOLTAJE*A*ITR","PRESENCIA*BANCO*BAT*ITR","ROBO*BARRA*TIERRA*ITR","ALARMA LIBRE 3","ALARMA LIBRE 4","ALARMA LIBRE 5","ALARMA LIBRE 6","ALARMA LIBRE 7","ALARMA LIBRE 8"];
+    const alarmNamesExternalOTY = ["FALLA*ALIM*COM*OTY","GPO*ELEC*OPER*OTY","FALLA*FUS*DIST*A*OTY","FALLA*RECT*A*OTY","ALTA*TEMP*CX*OTY","FALLA*FUS*VOLTA*A*OTY","BAT*EN*OPER*A*OTY","BAJO*VOLTAJE*A*OTY","PRESENCIA*BANCO*BAT*OTY","ROBO*BARRA*TIERRA*OTY","ALARMA LIBRE 3","ALARMA LIBRE 4","ALARMA LIBRE 5","ALARMA LIBRE 6","ALARMA LIBRE 7","ALARMA LIBRE 8"];
+    const alarmNamesExternalITR = ["FALLA*ALIM*COM*ITR","GPO*ELEC*OPER*ITR","FALLA*FUS*DIST*A*ITR","FALLA*RECT*A*ITR","ALTA*TEMP*CX*ITR","FALLA*FUS*VOLTA*A*ITR","BAT*EN*OPER*A*ITR","BAJO*VOLTAJE*A*ITR","PRESENCIA*BANCO*BAT*ITR","ROBO*BARRA*TIERRA*ITR","ALARMA LIBRE 3","ALARMA LIBRE 4","ALARMA LIBRE 5","ALARMA LIBRE 6","ALARMA LIBRE 7","ALARMA LIBRE 8"];
 
-  client.on('connect', () => {
-    console.log('✅ Conectado a EMQX');
-    client.subscribe(['esp32/External_Alarms_OTY', 'esp32/External_Alarms_ITR', 'esp32/NivelDiesel_ITR']);
-  });
-
-  client.on('message', (topic, message) => {
-    if (topic.includes('External_Alarms')) {
-      const highByte = message[0];
-      const lowByte = message[1];
-      const value = (highByte << 8) | lowByte;
-      const binStr = value.toString(2).padStart(16, '0');
-      const site = topic.includes('OTY') ? 'OTY' : 'ITR';
-
-      const byteDisplay = document.getElementById(`byte-external-${site}`);
-      if (byteDisplay) {
-        byteDisplay.textContent = `Bytes recibidos (${site}): ${highByte}, ${lowByte} | bin: ${binStr}`;
-      }
-
-      updateAlarms(`alarms-external-${site}`, value, (site === 'OTY' ? alarmNamesExternalOTY : alarmNamesExternalITR));
-    } else if (topic === 'esp32/NivelDiesel_ITR') {
-      updateDieselLevel(parseInt(message.toString()));
-    }
-  });
-
-  // --- Función para formatear fecha local ---
-  function formatDateLocal(date) {
-    const pad = (n) => n.toString().padStart(2, '0');
-    return `${pad(date.getDate())}/${pad(date.getMonth()+1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
-  }
-
-  function updateDieselLevel(porcentaje) {
-    const fill = document.getElementById('diesel-fill');
-    const text = document.getElementById('diesel-text');
-    if (!fill || !text) return;
-    const nivel = Math.max(0, Math.min(100, porcentaje));
-    fill.style.height = `${nivel}%`;
-    fill.style.background = nivel < 20 ? 'linear-gradient(to top, #800000, #ff0000)' : 
-                            nivel < 50 ? 'linear-gradient(to top, #e6b800, #ffff00)' : 
-                                         'linear-gradient(to top, #007b00, #00ff00)';
-    text.textContent = `${nivel}%`;
-  }
-
-  // --- Crear contenedores de historial ---
-  function createHistoryContainers() {
-    ['OTY', 'ITR'].forEach(site => {
-      const container = document.getElementById(`tab-${site === 'OTY' ? '0' : '1'}`);
-      if (!container) return;
-      const div = document.createElement('div');
-      div.innerHTML = `<h3>🚨 Historial Global ${site}</h3>
-                       <div id="sync-time-${site}" class="sync-status" style="font-size:12px; color:#666;">Cargando historial...</div>
-                       <ul id="history-${site}" class="history-box" style="list-style:none; padding:10px; background:#fff; border:1px solid #ccc; max-height:200px; overflow-y:auto;"></ul>`;
-      container.appendChild(div);
+    client.on('connect', () => {
+        console.log('✅ Conectado a EMQX');
+        client.subscribe(['esp32/External_Alarms_OTY', 'esp32/External_Alarms_ITR', 'esp32/NivelDiesel_ITR']);
     });
-  }
 
-  // --- Fetch historial global ---
-  async function fetchGlobalHistory() {
-    try {
-      const response = await fetch(GOOGLE_URL);
-      const data = await response.json();
-      if (data) {
-        alarmHistory = data;
-        renderHistory('OTY');
-        renderHistory('ITR');
-      }
-    } catch (e) {
-      console.error("Falla al conectar con Google:", e);
-    }
-  }
+    client.on('message', (topic, message) => {
+        if (topic.includes('External_Alarms')) {
+            const site = topic.includes('OTY') ? 'OTY' : 'ITR';
+            const value = (message[0] << 8) | message[1];
 
-  // --- Función única para registrar alarmas ---
-function logAlarmChange(site, name, state) {
-    // 1. Evitar duplicados inmediatos en la misma sesión
-    const ultimaEntrada = alarmHistory[site][alarmHistory[site].length - 1];
-    if (ultimaEntrada && ultimaEntrada.name === name && ultimaEntrada.state === state) {
-        console.log("Ignorando repetida localmente:", name);
-        return;
-    }
+            // Bloqueo: Si los bits no han cambiado, ignoramos el mensaje
+            if (value === lastMqttValue[site]) return;
+            lastMqttValue[site] = value;
 
-    const entry = { site, name, state, time: formatDateLocal(new Date()) };
-    if (!alarmHistory[site]) alarmHistory[site] = [];
-    alarmHistory[site].push(entry);
-
-    renderHistory(site);
-
-    // Enviar a Google
-    fetch(GOOGLE_URL, {
-        method: 'POST',
-        mode: 'no-cors', // Importante para evitar errores de CORS
-        body: JSON.stringify({ site, name, state })
-    });
-}
-
-  // --- Renderizar historial ---
-function renderHistory(site) {
-    const list = document.getElementById(`history-${site}`);
-    if (!list) return;
-
-    list.innerHTML = '';
-    const entries = (alarmHistory[site] || []);
-    
-    // Filtro para evitar que el "eco" de Google Sheets muestre duplicados
-    const registroUnico = [];
-    const huellas = new Set();
-
-    [...entries].reverse().forEach(entry => {
-        // Creamos una huella con nombre, estado y tiempo (sin segundos para mayor seguridad)
-        // Ejemplo: "FALLA*ALIM-🚨 ACTIVADA-24/01/2026 21:30"
-        const tiempoReducido = entry.time.substring(0, 16); 
-        const huella = `${entry.name}-${entry.state}-${tiempoReducido}`;
-
-        if (!huellas.has(huella)) {
-            huellas.add(huella);
-            registroUnico.push(entry);
+            updateAlarms(`alarms-external-${site}`, value, (site === 'OTY' ? alarmNamesExternalOTY : alarmNamesExternalITR));
+        } else if (topic === 'esp32/NivelDiesel_ITR') {
+            updateDieselLevel(parseInt(message.toString()));
         }
     });
 
-    registroUnico.slice(0, 30).forEach(entry => {
-        const li = document.createElement('li');
-        li.style.cssText = "border-bottom:1px solid #ddd; padding:5px; font-size:12px;";
-        const color = entry.state.includes('🚨') ? 'red' : 'green';
-        li.innerHTML = `<span style="color:#666;">[${entry.time}]</span> <b>${entry.name}</b> <span style="color:${color}; float:right;">${entry.state}</span>`;
-        list.appendChild(li);
-    });
-
-    // Actualizar el texto de carga
-    const syncLabel = document.getElementById(`sync-time-${site}`);
-    if (syncLabel) syncLabel.innerText = "Sincronizado: " + new Date().toLocaleTimeString();
-}
-
-  // --- Mapas de figuras ---
-  const figureMapOTY = { 0: "poste_OTY", 1: "generador_OTY", 2: "breaker_OTY", 3: "rectificador_OTY", 4: "termometro_OTY", 5: "bateria_OTY", 8: "persona_OTY", 9: "barra-tierra_OTY" };
-  const figureMapITR = { 0: "poste_ITR", 1: "generador_ITR", 2: "breaker_ITR", 3: "rectificador_ITR", 4: "termometro_ITR", 5: "bateria_ITR", 8: "persona_ITR", 9: "barra-tierra_ITR" };
-  let previousAlarmStates = { 'alarms-external-OTY': null, 'alarms-external-ITR': null };
-
-  // --- Actualizar alarmas ---
-  function updateAlarms(containerId, value16bit, alarmNames) {
-    const container = document.getElementById(containerId);
-    const prev = previousAlarmStates[containerId];
-    const site = containerId.includes('OTY') ? 'OTY' : 'ITR';
-    const current = [];
-    let hasActiveAlarm = false;
-
-    container.innerHTML = '';
-
-    for (let i = 0; i < 16; i++) {
-      const bit = (value16bit >> i) & 1;
-      current[i] = bit;
-      if (bit) hasActiveAlarm = true;
-
-      if (prev !== null && prev[i] !== bit) {
-        logAlarmChange(site, alarmNames[i], bit ? '🚨 ACTIVADA' : '✅ CESÓ');
-      }
-
-      const figId = (site === 'OTY' ? figureMapOTY : figureMapITR)[i];
-      if (figId) {
-        const fig = document.getElementById(figId);
-        if (fig) {
-          if (bit) fig.classList.add("alarm-figure-active", "alarm-blink");
-          else fig.classList.remove("alarm-figure-active", "alarm-blink");
-        }
-      }
-
-      const div = document.createElement('div');
-      div.className = 'alarm ' + (bit ? 'active' : 'inactive');
-      div.textContent = `A${i} - ${alarmNames[i]}: ${bit ? '🚨 Activa' : '✅ Sin alarma'}`;
-      container.appendChild(div);
+    function formatDateLocal(date) {
+        const pad = (n) => n.toString().padStart(2, '0');
+        // Formato exacto para coincidir con el de la hoja
+        return `${pad(date.getDate())}/${pad(date.getMonth()+1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
     }
 
-    previousAlarmStates[containerId] = current;
-    toggleAlarmTab(site === 'OTY' ? 0 : 1, hasActiveAlarm);
-  }
+    async function logAlarmChange(site, name, state) {
+        // 1. Evitar duplicados inmediatos en memoria
+        const siteHistory = alarmHistory[site] || [];
+        const ultima = siteHistory[siteHistory.length - 1];
+        if (ultima && ultima.name === name && ultima.state === state) return;
 
-  function showTab(index) {
-    document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === index));
-    document.querySelectorAll('.tab-content').forEach((c, i) => c.classList.toggle('active', i === index));
-  }
+        const entry = { site, name, state, time: formatDateLocal(new Date()) };
+        if (!alarmHistory[site]) alarmHistory[site] = [];
+        alarmHistory[site].push(entry);
 
-  function toggleAlarmTab(idx, active) {
-    const tabs = document.querySelectorAll('.tab');
-    if(tabs[idx]) tabs[idx].classList.toggle('alarm-active-tab', active);
-  }
+        renderHistory(site);
 
-  // --- Inicialización ---
-  createHistoryContainers();
-  fetchGlobalHistory();
-  setInterval(fetchGlobalHistory, 15000);
+        // 2. Semáforo para evitar doble POST a Google
+        if (isSending) return;
+        isSending = true;
+
+        try {
+            await fetch(GOOGLE_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify({ site, name, state })
+            });
+        } catch (e) {
+            console.error("Error enviando a Google:", e);
+        } finally {
+            // Permitir nuevo envío tras 2 segundos
+            setTimeout(() => { isSending = false; }, 2000);
+        }
+    }
+
+    function renderHistory(site) {
+        const list = document.getElementById(`history-${site}`);
+        const syncLabel = document.getElementById(`sync-time-${site}`);
+        if (!list) return;
+
+        list.innerHTML = '';
+        const entries = (alarmHistory[site] || []);
+        const registroUnico = [];
+        const huellas = new Set();
+
+        // Limpieza de "eco": Comparamos Nombre+Estado+Minuto
+        [...entries].reverse().forEach(entry => {
+            const tiempoSinSegundos = String(entry.time).substring(0, 16); 
+            const huella = `${entry.name}-${entry.state}-${tiempoSinSegundos}`;
+
+            if (!huellas.has(huella)) {
+                huellas.add(huella);
+                registroUnico.push(entry);
+            }
+        });
+
+        registroUnico.slice(0, 30).forEach(entry => {
+            const li = document.createElement('li');
+            li.style.cssText = "border-bottom:1px solid #ddd; padding:5px; font-size:12px; list-style:none;";
+            const color = entry.state.includes('🚨') ? 'red' : 'green';
+            li.innerHTML = `<span style="color:#666;">[${entry.time}]</span> <b>${entry.name}</b> <span style="color:${color}; float:right; font-weight:bold;">${entry.state}</span>`;
+            list.appendChild(li);
+        });
+
+        if (syncLabel) {
+            syncLabel.innerText = "Sincronizado: " + new Date().toLocaleTimeString('es-MX', { hour12: false });
+        }
+    }
+
+    async function fetchGlobalHistory() {
+        try {
+            const response = await fetch(GOOGLE_URL);
+            const data = await response.json();
+            if (data && (data.OTY || data.ITR)) {
+                alarmHistory = data;
+                renderHistory('OTY');
+                renderHistory('ITR');
+            }
+        } catch (e) {
+            console.error("Error cargando historial:", e);
+        }
+    }
+
+    function updateAlarms(containerId, value16bit, alarmNames) {
+        const container = document.getElementById(containerId);
+        const prev = previousAlarmStates[containerId];
+        const site = containerId.includes('OTY') ? 'OTY' : 'ITR';
+        const current = [];
+        let hasActiveAlarm = false;
+
+        container.innerHTML = '';
+
+        for (let i = 0; i < 16; i++) {
+            const bit = (value16bit >> i) & 1;
+            current[i] = bit;
+            if (bit) hasActiveAlarm = true;
+
+            if (prev !== null && prev[i] !== bit) {
+                logAlarmChange(site, alarmNames[i], bit ? '🚨 ACTIVADA' : '✅ CESÓ');
+            }
+
+            const figId = (site === 'OTY' ? figureMapOTY : figureMapITR)[i];
+            if (figId) {
+                const fig = document.getElementById(figId);
+                if (fig) {
+                    if (bit) fig.classList.add("alarm-figure-active", "alarm-blink");
+                    else fig.classList.remove("alarm-figure-active", "alarm-blink");
+                }
+            }
+
+            const div = document.createElement('div');
+            div.className = 'alarm ' + (bit ? 'active' : 'inactive');
+            div.textContent = `A${i} - ${alarmNames[i]}: ${bit ? '🚨 Activa' : '✅ Sin alarma'}`;
+            container.appendChild(div);
+        }
+        previousAlarmStates[containerId] = current;
+        toggleAlarmTab(site === 'OTY' ? 0 : 1, hasActiveAlarm);
+    }
+
+    // Funciones de apoyo (Igual a tu código original)
+    function updateDieselLevel(porcentaje) {
+        const fill = document.getElementById('diesel-fill');
+        const text = document.getElementById('diesel-text');
+        if (!fill || !text) return;
+        const nivel = Math.max(0, Math.min(100, porcentaje));
+        fill.style.height = `${nivel}%`;
+        fill.style.background = nivel < 20 ? 'linear-gradient(to top, #800000, #ff0000)' : 
+                                nivel < 50 ? 'linear-gradient(to top, #e6b800, #ffff00)' : 
+                                             'linear-gradient(to top, #007b00, #00ff00)';
+        text.textContent = `${nivel}%`;
+    }
+
+    function createHistoryContainers() {
+        ['OTY', 'ITR'].forEach(site => {
+            const container = document.getElementById(`tab-${site === 'OTY' ? '0' : '1'}`);
+            if (!container) return;
+            const div = document.createElement('div');
+            div.innerHTML = `<h3>🚨 Historial Global ${site}</h3>
+                             <div id="sync-time-${site}" class="sync-status" style="font-size:12px; color:#666;">Cargando historial...</div>
+                             <ul id="history-${site}" class="history-box" style="list-style:none; padding:10px; background:#fff; border:1px solid #ccc; max-height:200px; overflow-y:auto;"></ul>`;
+            container.appendChild(div);
+        });
+    }
+
+    const figureMapOTY = { 0: "poste_OTY", 1: "generador_OTY", 2: "breaker_OTY", 3: "rectificador_OTY", 4: "termometro_OTY", 5: "bateria_OTY", 8: "persona_OTY", 9: "barra-tierra_OTY" };
+    const figureMapITR = { 0: "poste_ITR", 1: "generador_ITR", 2: "breaker_ITR", 3: "rectificador_ITR", 4: "termometro_ITR", 5: "bateria_ITR", 8: "persona_ITR", 9: "barra-tierra_ITR" };
+    let previousAlarmStates = { 'alarms-external-OTY': null, 'alarms-external-ITR': null };
+
+    function showTab(index) {
+        document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === index));
+        document.querySelectorAll('.tab-content').forEach((c, i) => c.classList.toggle('active', i === index));
+    }
+
+    function toggleAlarmTab(idx, active) {
+        const tabs = document.querySelectorAll('.tab');
+        if(tabs[idx]) tabs[idx].classList.toggle('alarm-active-tab', active);
+    }
+
+    // Inicialización
+    createHistoryContainers();
+    fetchGlobalHistory();
+    setInterval(fetchGlobalHistory, 20000); // Aumentado a 20s para dar tiempo al servidor
 </script>
 </body>
 </html>
