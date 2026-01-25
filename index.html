@@ -831,17 +831,14 @@ body {
 
   // --- Función única para registrar alarmas ---
 function logAlarmChange(site, name, state) {
-    // 1. Verificar si la última alarma registrada es IDÉNTICA
-    const historialActual = alarmHistory[site] || [];
-    const ultima = historialActual[historialActual.length - 1];
-    
-    if (ultima && ultima.name === name && ultima.state === state) {
-        console.log("Alarma ya registrada, ignorando envío a Google:", name);
-        return; 
+    // 1. Evitar duplicados inmediatos en la misma sesión
+    const ultimaEntrada = alarmHistory[site][alarmHistory[site].length - 1];
+    if (ultimaEntrada && ultimaEntrada.name === name && ultimaEntrada.state === state) {
+        console.log("Ignorando repetida localmente:", name);
+        return;
     }
 
     const entry = { site, name, state, time: formatDateLocal(new Date()) };
-    
     if (!alarmHistory[site]) alarmHistory[site] = [];
     alarmHistory[site].push(entry);
 
@@ -850,7 +847,7 @@ function logAlarmChange(site, name, state) {
     // Enviar a Google
     fetch(GOOGLE_URL, {
         method: 'POST',
-        mode: 'no-cors',
+        mode: 'no-cors', // Importante para evitar errores de CORS
         body: JSON.stringify({ site, name, state })
     });
 }
@@ -858,23 +855,20 @@ function logAlarmChange(site, name, state) {
   // --- Renderizar historial ---
 function renderHistory(site) {
     const list = document.getElementById(`history-${site}`);
-    const syncLabel = document.getElementById(`sync-time-${site}`);
     if (!list) return;
 
     list.innerHTML = '';
     const entries = (alarmHistory[site] || []);
     
+    // Filtro para evitar que el "eco" de Google Sheets muestre duplicados
     const registroUnico = [];
     const huellas = new Set();
 
-    // Ordenamos: los más nuevos primero
-    const reversedEntries = [...entries].reverse();
-
-    reversedEntries.forEach(entry => {
-        // HUELLA ESTRICTA: Nombre + Estado + Fecha y Hora (sin segundos)
-        // Esto elimina el duplicado aunque Google lo regrese 5 segundos después
-        const tiempoSinSegundos = String(entry.time).substring(0, 16); 
-        const huella = `${entry.name}-${entry.state}-${tiempoSinSegundos}`;
+    [...entries].reverse().forEach(entry => {
+        // Creamos una huella con nombre, estado y tiempo (sin segundos para mayor seguridad)
+        // Ejemplo: "FALLA*ALIM-🚨 ACTIVADA-24/01/2026 21:30"
+        const tiempoReducido = entry.time.substring(0, 16); 
+        const huella = `${entry.name}-${entry.state}-${tiempoReducido}`;
 
         if (!huellas.has(huella)) {
             huellas.add(huella);
@@ -884,16 +878,15 @@ function renderHistory(site) {
 
     registroUnico.slice(0, 30).forEach(entry => {
         const li = document.createElement('li');
-        li.style.cssText = "border-bottom:1px solid #ddd; padding:5px; font-size:12px; list-style:none;";
+        li.style.cssText = "border-bottom:1px solid #ddd; padding:5px; font-size:12px;";
         const color = entry.state.includes('🚨') ? 'red' : 'green';
-        
-        li.innerHTML = `<span style="color:#666;">[${entry.time}]</span> <b>${entry.name}</b> <span style="color:${color}; float:right; font-weight:bold;">${entry.state}</span>`;
+        li.innerHTML = `<span style="color:#666;">[${entry.time}]</span> <b>${entry.name}</b> <span style="color:${color}; float:right;">${entry.state}</span>`;
         list.appendChild(li);
     });
 
-    if (syncLabel) {
-        syncLabel.innerText = "Sincronizado: " + new Date().toLocaleTimeString('es-MX', { hour12: false });
-    }
+    // Actualizar el texto de carga
+    const syncLabel = document.getElementById(`sync-time-${site}`);
+    if (syncLabel) syncLabel.innerText = "Sincronizado: " + new Date().toLocaleTimeString();
 }
 
   // --- Mapas de figuras ---
