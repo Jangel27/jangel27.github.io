@@ -97,7 +97,11 @@ body {
       font-size: 16px;
       font-weight: bold;
     }
-
+	  
+	.status-indicator {
+    padding: 10px; text-align: center; font-weight: bold; 
+    border-radius: 5px; margin-bottom: 10px; background-color: #ffc107;
+  	}
     /* ====== Área de la casa ====== */
     .house-area {
     	display: flex;
@@ -416,6 +420,7 @@ body {
   <!-- TAB 0: OTY -->
   <div id="tab-0" class="tab-content active">
     <div class="byte-info" id="byte-external-OTY">Esperando datos de OTY...</div>
+	<div id="status-OTY" class="status-indicator">⏳ ESPERANDO DATOS OTY...</div>
     <div class="alarms-house-layout">
     	<div class="alarms-container" id="alarms-external-OTY"></div>
       	<div class="house-area">
@@ -576,6 +581,7 @@ body {
 <!-- TAB 1: ITR -->
 <div id="tab-1" class="tab-content">
 	<div class="byte-info" id="byte-external-ITR">Esperando datos de ITR...</div>
+	<div id="status-ITR" class="status-indicator">⏳ ESPERANDO DATOS ITR...</div>
     <div class="alarms-house-layout">
 		<!-- Contenedor de alarmas -->
       	<div class="alarms-container" id="alarms-external-ITR"></div>
@@ -769,6 +775,13 @@ body {
     });
 
     client.on('message', (topic, message) => {
+		// Detectamos de qué sitio viene el mensaje
+   	 	const site = topic.includes('OTY') ? 'OTY' : 'ITR';
+    
+    	// Actualizamos su tiempo de vida
+    	lastHeartbeat[site] = Date.now();
+    	updateStatusUI(site, true);
+		
         if (topic.includes('External_Alarms')) {
             const site = topic.includes('OTY') ? 'OTY' : 'ITR';
             const value = (message[0] << 8) | message[1];
@@ -962,6 +975,35 @@ async function fetchGlobalHistory() {
         if(tabs[idx]) tabs[idx].classList.toggle('alarm-active-tab', active);
     }
 
+	 let lastHeartbeat = {
+    'OTY': Date.now(),
+    'ITR': Date.now()
+};
+
+function updateStatusUI(site, isOnline) {
+    const el = document.getElementById(`status-${site}`);
+    if (!el) return;
+
+    if (isOnline) {
+        el.style.backgroundColor = "#28a745"; // Verde
+        el.style.color = "#fff";
+        el.innerText = `● SISTEMA ${site} EN LÍNEA`;
+    } else {
+        el.style.backgroundColor = "#dc3545"; // Rojo
+        el.style.color = "#fff";
+        el.innerText = `○ SISTEMA ${site} FUERA DE LÍNEA`;
+    }
+}
+	setInterval(() => {
+    const ahora = Date.now();
+    ['OTY', 'ITR'].forEach(site => {
+        // Si han pasado más de 6 minutos de silencio para ese sitio
+        if (ahora - lastHeartbeat[site] > 360000) {
+            updateStatusUI(site, false);
+        }
+    });
+}, 10000);
+	 
     // Inicialización
     createHistoryContainers();
     fetchGlobalHistory();
