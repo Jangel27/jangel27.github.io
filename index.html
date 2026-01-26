@@ -744,7 +744,7 @@ body {
 </div>
  <script>
     // === CONFIGURACIÓN GLOBAL ===
-    const GOOGLE_URL = "https://script.google.com/macros/s/AKfycbwZwHXlzfUNQ6RNk-QKs1L7aQN9T6wmmsh3WRI3pR5sHu_wrncxYYr9WcdYPSodmqOM/exec"; 
+    const GOOGLE_URL = "https://script.google.com/macros/s/AKfycbyAgMSME-01GlInaKeOzVXh95uQEfx4C1WgddFdm1M8oNp96aVM59z5XSN6zA4p4_7Q/exec"; 
 
     let alarmHistory = { 'OTY': [], 'ITR': [] };
 
@@ -853,19 +853,39 @@ body {
         }
     }
 
-    async function fetchGlobalHistory() {
-        try {
-            const response = await fetch(GOOGLE_URL);
-            const data = await response.json();
-            if (data && (data.OTY || data.ITR)) {
-                alarmHistory = data;
-                renderHistory('OTY');
-                renderHistory('ITR');
-            }
-        } catch (e) {
-            console.error("Error cargando historial:", e);
+async function fetchGlobalHistory() {
+    try {
+        const response = await fetch(GOOGLE_URL);
+        const data = await response.json();
+        
+        if (data) {
+            ['OTY', 'ITR'].forEach(site => {
+                if (data[site]) {
+                    // Combinamos lo que ya tenemos con lo nuevo de Google
+                    const combined = [...alarmHistory[site], ...data[site]];
+                    
+                    // Mapa para eliminar duplicados por Nombre-Estado-Tiempo
+                    const uniqueMap = new Map();
+                    const filtered = [];
+
+                    combined.forEach(entry => {
+                        const key = `${entry.name}-${entry.state}-${entry.time}`;
+                        if (!uniqueMap.has(key)) {
+                            uniqueMap.set(key, true);
+                            filtered.push(entry);
+                        }
+                    });
+
+                    // Actualizamos la memoria local sin borrar los eventos recientes
+                    alarmHistory[site] = filtered;
+                    renderHistory(site);
+                }
+            });
         }
+    } catch (e) {
+        console.error("Error cargando historial:", e);
     }
+}
 
     function updateAlarms(containerId, value16bit, alarmNames) {
         const container = document.getElementById(containerId);
