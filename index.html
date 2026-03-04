@@ -775,11 +775,13 @@ client.on('message',(topic,message)=>{
         const estado = data.s === 1 ? "🚨 ACTIVADA" : "✅ CESÓ";
 
         // Usamos el timestamp real del ESP32
-        db.ref(`history/${id}`).push({
-            time: data.t * 1000,   // convertir epoch a milisegundos
-            name: alarmName,
-            state: estado
-        	});
+       const eventId = `${data.t}_${data.i}`;
+
+		db.ref(`history/${id}/${eventId}`).set({
+		    time: data.t * 1000,
+		    name: alarmName,
+		    state: estado
+			});
     	}	
     } else if(topic===CONFIG_SITIOS[id].topicos.diesel){
         const porc = parseInt(message.toString());
