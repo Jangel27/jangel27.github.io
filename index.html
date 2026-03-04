@@ -401,11 +401,11 @@
 <script>
 /* ---------------- CONFIGURACIÓN SITIOS ---------------- */
 const CONFIG_SITIOS = {
-    'OTY': { nombre:"Sitio OTY", tieneDiesel:true, topicos:{alarmas:'esp32/External_Alarms_OTY', diesel:'esp32/NivelDiesel_OTY', status:'esp32/status_OTY'},
+    'OTY': { nombre:"Sitio OTY", tieneDiesel:true, topicos:{alarmas:'esp32/External_Alarms_OTY', diesel:'esp32/NivelDiesel_OTY', status:'esp32/status_OTY', history:'esp32/history_OTY'},
              alarmNames:["FALLA*ALIM*COM","GPO*ELEC*OPER","FALLA*FUS*DIST*A","FALLA*RECT*A","ALTA*TEMP*CX","FALLA*FUS*VOLTA*A","BAT*EN*OPER*A","BAJO*VOLTAJE*A","PRESENCIA*BANCO*BAT","ROBO*BARRA*TIERRA","ALARMA LIBRE 1","ALARMA LIBRE 2","ALARMA LIBRE 3","ALARMA LIBRE 4","ALARMA LIBRE 5","ALARMA LIBRE 6"] },
-    'TIP': { nombre:"Sitio TIP", tieneDiesel:false, topicos:{alarmas:'esp32/External_Alarms_TIP', status:'esp32/status_TIP'},
+    'TIP': { nombre:"Sitio TIP", tieneDiesel:false, topicos:{alarmas:'esp32/External_Alarms_TIP', status:'esp32/status_TIP', history:'esp32/history_TIP'},
              alarmNames:["FALLA*ALIM*COM","GPO*ELEC*OPER","FALLA*FUS*DIST*A","FALLA*RECT*A","ALTA*TEMP*CX","FALLA*FUS*VOLTA*A","BAT*EN*OPER*A","BAJO*VOLTAJE*A","PRESENCIA*BANCO*BAT","ROBO*BARRA*TIERRA","ALARMA LIBRE 1","ALARMA LIBRE 2","ALARMA LIBRE 3","ALARMA LIBRE 4","ALARMA LIBRE 5","ALARMA LIBRE 6"] },
-    'ITR': { nombre:"Sitio ITR", tieneDiesel:true, topicos:{alarmas:'esp32/External_Alarms_ITR', diesel:'esp32/NivelDiesel_ITR', status:'esp32/status_ITR'},
+    'ITR': { nombre:"Sitio ITR", tieneDiesel:true, topicos:{alarmas:'esp32/External_Alarms_ITR', diesel:'esp32/NivelDiesel_ITR', status:'esp32/status_ITR', history:'esp32/history_ITR'},
              alarmNames:["FALLA*ALIM*COM","GPO*ELEC*OPER","FALLA*FUS*DIST*A","FALLA*RECT*A","ALTA*TEMP*CX","FALLA*FUS*VOLTA*A","BAT*EN*OPER*A","BAJO*VOLTAJE*A","PRESENCIA*BANCO*BAT","ROBO*BARRA*TIERRA","ALARMA LIBRE 1","ALARMA LIBRE 2","ALARMA LIBRE 3","ALARMA LIBRE 4","ALARMA LIBRE 5","ALARMA LIBRE 6"] }
     
 };
@@ -443,6 +443,13 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
+
+const IS_MASTER = localStorage.getItem("MASTER_INSTANCE") === null;
+
+if(IS_MASTER){
+    localStorage.setItem("MASTER_INSTANCE","true");
+}
+
 
 /* ---------------- GENERADOR DINÁMICO ---------------- */
 function getHouseHTML(id, showExternal){
@@ -702,36 +709,36 @@ function initDashboard() {
 /* =====================
    Función separada para historial
 ===================== */
-function loadHistory(id, nombre){
+//function loadHistory(id, nombre){
 
-    const wrapper = document.getElementById(`history-wrapper-${id}`);
-    wrapper.innerHTML = `
-        <div class="history-section">
-            <h3 class="history-title">📜 Historial ${nombre}</h3>
-            <ul id="history-${id}" class="history-box"></ul>
-        </div>
-    `;
+//    const wrapper = document.getElementById(`history-wrapper-${id}`);
+//    wrapper.innerHTML = `
+//        <div class="history-section">
+//            <h3 class="history-title">📜 Historial ${nombre}</h3>
+//            <ul id="history-${id}" class="history-box"></ul>
+//        </div>
+//    `;
 
-    const historyRef = db.ref(`history/${id}`);
-    historyRef.off();
+//    const historyRef = db.ref(`history/${id}`);
+//    historyRef.off();
 
-    const box = document.getElementById(`history-${id}`);
-    box.innerHTML = '';
+//    const box = document.getElementById(`history-${id}`);
+//    box.innerHTML = '';
 
-    historyRef.limitToLast(50).once("value", snapshot => {
-        if(!snapshot.exists()) return;
+//    historyRef.limitToLast(50).once("value", snapshot => {
+//        if(!snapshot.exists()) return;
 
-        snapshot.forEach(child => {
-            const data = child.val();
-            if(!data) return;
+//        snapshot.forEach(child => {
+//            const data = child.val();
+//            if(!data) return;
 
-            const time = new Date(data.time).toLocaleString();
-            box.innerHTML =
-                `<li><span>${time}</span> <b>${data.name}</b>: ${data.state}</li>` + box.innerHTML;
-        });
-    });
+//            const time = new Date(data.time).toLocaleString();
+//            box.innerHTML =
+//                `<li><span>${time}</span> <b>${data.name}</b>: ${data.state}</li>` + box.innerHTML;
+//        });
+//    });
 
-}
+//}
 
 /* ----------------- MQTT ----------------- */
 const client = mqtt.connect('wss://d4e6f442.ala.us-east-1.emqxsl.com:8084/mqtt',{
@@ -741,7 +748,7 @@ const client = mqtt.connect('wss://d4e6f442.ala.us-east-1.emqxsl.com:8084/mqtt',
 
 client.on('connect',()=>{
     Object.values(CONFIG_SITIOS).forEach(s=>{
-        client.subscribe([s.topicos.alarmas, s.topicos.status]);
+        client.subscribe([s.topicos.alarmas, s.topicos.status,s.topicos.history]);
         if(s.topicos.diesel) client.subscribe(s.topicos.diesel);
     });
 });
@@ -755,6 +762,25 @@ client.on('message',(topic,message)=>{
     } else if(topic===CONFIG_SITIOS[id].topicos.alarmas){
         const val = (message[0]<<8)|message[1];
         updateUI(id,val);
+
+	} else if(topic===CONFIG_SITIOS[id].topicos.history){
+
+    if(IS_MASTER){
+
+        const data = JSON.parse(message.toString());
+
+        // data = { i:0-15, s:0/1, t:epoch }
+
+        const alarmName = CONFIG_SITIOS[id].alarmNames[data.i];
+        const estado = data.s === 1 ? "🚨 ACTIVADA" : "✅ CESÓ";
+
+        // Usamos el timestamp real del ESP32
+        db.ref(`history/${id}`).push({
+            time: data.t * 1000,   // convertir epoch a milisegundos
+            name: alarmName,
+            state: estado
+        	});
+    	}	
     } else if(topic===CONFIG_SITIOS[id].topicos.diesel){
         const porc = parseInt(message.toString());
         siteState[id].dieselLevel = porc; // <-- actualizar siempre
@@ -796,10 +822,10 @@ function updateUI(id, val){
         }
 
         // Guardar histórico si cambió el estado
-        if(siteState[id].lastVal !== null &&
-           active !== ((siteState[id].lastVal >> i) & 1)){
-            addHistory(id, alarmName, active ? "🚨 ACTIVADA" : "✅ CESÓ");
-        }
+        //if(siteState[id].lastVal !== null &&
+        //   active !== ((siteState[id].lastVal >> i) & 1)){
+        //    addHistory(id, alarmName, active ? "🚨 ACTIVADA" : "✅ CESÓ");
+        //}
     }
 
     siteState[id].hasAlarm = alarmed;
@@ -810,19 +836,19 @@ function updateUI(id, val){
 }
 
 /* ----------------- HISTÓRICO ----------------- */
-function addHistory(site,name,state){
-    const time = new Date().toLocaleString();
+//function addHistory(site,name,state){
+//    const time = new Date().toLocaleString();
 
     // VERIFICAR site antes de guardar
-    console.log("Intentando guardar alarma en Firebase", { site, name, state });
+//    console.log("Intentando guardar alarma en Firebase", { site, name, state });
     
     // Guardar en Firebase solo si site es válido
-    if(site){
-        db.ref(`history/${site}`).push({ time:Date.now(), name, state })
-          .then(()=>console.log("Alarma guardada en Firebase para", site))
-          .catch(err=>console.error("Error guardando en Firebase:", err));
-    }
-}
+//    if(site){
+//        db.ref(`history/${site}`).push({ time:Date.now(), name, state })
+//          .then(()=>console.log("Alarma guardada en Firebase para", site))
+//          .catch(err=>console.error("Error guardando en Firebase:", err));
+//    }
+//}
 
 function exportHistoryToExcel(id) {
     const table = document.getElementById(`history-${id}`);
