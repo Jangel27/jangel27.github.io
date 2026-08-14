@@ -805,8 +805,7 @@ client.on('message',(topic,message)=>{
 		} else {
         console.warn("⚠️ NO SE GUARDA: esta página NO es MASTER");
     }
-}
-    	}	
+		
     } else if(topic===CONFIG_SITIOS[id].topicos.diesel){
         const porc = parseInt(message.toString());
         siteState[id].dieselLevel = porc; // <-- actualizar siempre
