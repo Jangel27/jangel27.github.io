@@ -766,23 +766,46 @@ client.on('message',(topic,message)=>{
 
 	} else if(topic===CONFIG_SITIOS[id].topicos.history){
 
+	console.log("=================================");
+    console.log("📜 MENSAJE DE HISTORIAL RECIBIDO");
+    console.log("📍 Sitio:", id);
+    console.log("📡 Topic:", topic);
+    console.log("👑 IS_MASTER:", IS_MASTER);
+    console.log("📦 Mensaje:", message.toString());
+
     if(IS_MASTER){
 
         const data = JSON.parse(message.toString());
 
-        // data = { i:0-15, s:0/1, t:epoch }
+        console.log("📊 Datos JSON:", data);
 
         const alarmName = CONFIG_SITIOS[id].alarmNames[data.i];
         const estado = data.s === 1 ? "🚨 ACTIVADA" : "✅ CESÓ";
 
         // Usamos el timestamp real del ESP32
        const eventId = `${data.t}_${data.i}`;
+		
+		console.log("🆔 Event ID:", eventId);
+        console.log("🚨 Alarma:", alarmName);
+        console.log("📌 Estado:", estado);
+        console.log("🔥 Intentando escribir en Firebase...");
 
 		db.ref(`history/${id}/${eventId}`).set({
 		    time: data.t * 1000,
 		    name: alarmName,
 		    state: estado
-			});
+			})
+			.then(() => {
+            console.log("✅✅✅ FIREBASE GUARDÓ CORRECTAMENTE");
+            console.log(`Ruta: history/${id}/${eventId}`);
+        })
+        .catch(error => {
+            console.error("❌❌❌ ERROR FIREBASE:", error);
+        });
+		} else {
+        console.warn("⚠️ NO SE GUARDA: esta página NO es MASTER");
+    }
+}
     	}	
     } else if(topic===CONFIG_SITIOS[id].topicos.diesel){
         const porc = parseInt(message.toString());
